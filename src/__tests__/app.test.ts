@@ -32,6 +32,9 @@ describe('App Tests', () => {
       expect(response.body).toHaveProperty('users');
       expect(response.body.users).toHaveLength(2);
       expect(response.body.users[0]).toHaveProperty('name', 'John Doe');
+      expect(response.body.users[0]).toHaveProperty('email', 'john@example.com');
+      expect(response.body.users[1]).toHaveProperty('name', 'Jane Smith');
+      expect(response.body.users[1]).toHaveProperty('email', 'jane@example.com');
     });
   });
 
