@@ -1,0 +1,13 @@
+# Auto detect text files and perform LF normalization
+* text=auto
+
+# Source files should use LF (Unix line endings)
+*.js text eol=lf
+*.ts text eol=lf
+*.json text eol=lf
+*.md text eol=lf
+
+# Binary files should be left as-is
+*.png binary
+*.jpg binary
+*.ico binary

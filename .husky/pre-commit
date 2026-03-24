@@ -1,11 +1,2 @@
-#!/usr/bin/env sh
-. "$(dirname -- "$0")/_/husky.sh"
-
-# Run linting
-npm run lint
-
-# Run formatting check
-npm run format:check
-
-# Run tests
-npm run test
+# Remove the old content and add this:
+npx lint-staged
