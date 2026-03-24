@@ -9,14 +9,14 @@ WORKDIR /app
 COPY package*.json ./
 COPY tsconfig.json ./
 
-# Install dependencies
+# Install all dependencies (including dev dependencies)
 RUN npm ci
 
 # Copy source code
 COPY src ./src
 
-# Build the application
-RUN npm run build
+# Build the application (using docker-specific script that skips linting/tests)
+RUN npm run build:docker
 
 # Production stage
 FROM node:18-alpine
@@ -26,11 +26,18 @@ WORKDIR /app
 # Copy package files
 COPY package*.json ./
 
-# Install production dependencies only
-RUN npm ci --only=production
+# Install production dependencies only (skip prepare script)
+RUN npm ci --omit=dev --ignore-scripts
 
 # Copy built application from builder stage
 COPY --from=builder /app/dist ./dist
+
+# Create a non-root user to run the app
+RUN addgroup -g 1001 -S nodejs && \
+    adduser -S nodejs -u 1001 -G nodejs && \
+    chown -R nodejs:nodejs /app
+
+USER nodejs
 
 # Expose the port the app runs on
 EXPOSE 3000
