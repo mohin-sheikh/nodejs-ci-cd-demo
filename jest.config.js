@@ -1,4 +1,4 @@
-module.exports = {
+export default {
     preset: 'ts-jest',
     testEnvironment: 'node',
     roots: ['<rootDir>/src'],
@@ -8,7 +8,6 @@ module.exports = {
         '!src/**/*.d.ts',
         '!src/**/__tests__/**',
         '!src/server.ts',
-        '!src/index.ts'
     ],
     coverageThreshold: {
         global: {
@@ -18,5 +17,11 @@ module.exports = {
             statements: 70
         }
     },
-    coverageReporters: ['text', 'lcov', 'html']
+    coverageReporters: ['text', 'lcov', 'html'],
+    extensionsToTreatAsEsm: ['.ts'],
+    transform: {
+        '^.+\\.tsx?$': ['ts-jest', {
+            useESM: true,
+        }],
+    },
 };
