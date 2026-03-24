@@ -10,7 +10,6 @@ env:
   NODE_VERSION: '18'
 
 jobs:
-  # Build and Test Job
   build-and-test:
     name: Build and Test
     runs-on: ubuntu-latest
@@ -47,7 +46,6 @@ jobs:
         directory: ./coverage
         fail_ci_if_error: false
 
-  # Security Scan Job
   security-scan:
     name: Security Scan
     runs-on: ubuntu-latest
@@ -64,15 +62,6 @@ jobs:
       run: npm audit --audit-level=moderate || true
       continue-on-error: true
     
-    # Optional: Snyk scan - remove if you don't have an account
-    # - name: Run Snyk security scan
-    #   uses: snyk/actions/node@master
-    #   env:
-    #     SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
-    #   with:
-    #     args: --severity-threshold=high
-    #   continue-on-error: true
-
   # Docker Build and Push (for main branch only)
   docker-build:
     name: Build and Push Docker Image
@@ -115,9 +104,9 @@ jobs:
     steps:
     - name: Deploy to server
       run: |
-        echo "✅ Docker image built and pushed successfully!"
-        echo "📦 Image: ${{ secrets.DOCKER_USERNAME }}/node-ts-cicd-demo:latest"
-        echo "🔗 Ready for deployment"
+        echo "Docker image built and pushed successfully!"
+        echo "Image: ${{ secrets.DOCKER_USERNAME }}/node-ts-cicd-demo:latest"
+        echo "Ready for deployment"
         # Add your deployment commands here when you're ready
         # Example: 
         # - SSH to your server
