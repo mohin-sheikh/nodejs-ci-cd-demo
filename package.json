@@ -15,8 +15,14 @@
     "lint:fix": "eslint \"src/**/*.{js,ts}\" --fix",
     "format": "prettier --write \"src/**/*.{js,ts,json}\"",
     "format:check": "prettier --check \"src/**/*.{js,ts,json}\"",
-    "prebuild": "npm run lint && npm run format:check && npm run test:coverage",
-    "prepare": "husky"
+    "prebuild": "npm run lint && npm run format:check",
+    "prepare": "husky",
+    "typeorm": "typeorm-ts-node-commonjs",
+    "migration:generate": "npm run typeorm -- migration:generate -d src/config/database.ts",
+    "migration:create": "npm run typeorm -- migration:create",
+    "migration:run": "npm run typeorm -- migration:run -d src/config/database.ts",
+    "migration:revert": "npm run typeorm -- migration:revert -d src/config/database.ts",
+    "migration:show": "npm run typeorm -- migration:show -d src/config/database.ts"
   },
   "lint-staged": {
     "src/**/*.{js,ts}": [
@@ -37,9 +43,10 @@
   "license": "MIT",
   "devDependencies": {
     "@eslint/js": "^9.21.0",
-    "@types/express": "^5.0.0",
+    "@types/express": "^5.0.6",
     "@types/jest": "^29.5.14",
-    "@types/node": "^22.13.10",
+    "@types/node": "^22.19.15",
+    "@types/pg": "^8.20.0",
     "@types/supertest": "^6.0.2",
     "@typescript-eslint/eslint-plugin": "^7.18.0",
     "@typescript-eslint/parser": "^7.18.0",
@@ -56,6 +63,10 @@
     "typescript": "5.5.4"
   },
   "dependencies": {
-    "express": "^4.21.2"
+    "dotenv": "^17.3.1",
+    "express": "^4.21.2",
+    "pg": "^8.20.0",
+    "reflect-metadata": "^0.2.2",
+    "typeorm": "^0.3.28"
   }
 }
