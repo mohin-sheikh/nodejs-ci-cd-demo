@@ -11,13 +11,12 @@ export interface DatabaseConfig {
 }
 
 export interface AppConfig {
-  port?: number; // Make port optional
+  port?: number;
   nodeEnv: string;
   database: DatabaseConfig;
 }
 
 export function validateConfig(): AppConfig {
-  // Validate PORT - only required if not in migration context
   let port: number | undefined;
   if (process.env.PORT) {
     port = parseInt(process.env.PORT);
@@ -28,14 +27,12 @@ export function validateConfig(): AppConfig {
     }
   }
 
-  // Validate NODE_ENV
   const nodeEnv = process.env.NODE_ENV || 'development';
   const validEnvs = ['development', 'production', 'test'];
   if (!validEnvs.includes(nodeEnv)) {
     throw new Error(`NODE_ENV must be one of: ${validEnvs.join(', ')}, got: ${nodeEnv}`);
   }
 
-  // Validate database configuration
   const requiredDbVars = ['DB_HOST', 'DB_PORT', 'DB_USERNAME', 'DB_PASSWORD', 'DB_DATABASE'];
   const missingDbVars = requiredDbVars.filter((varName) => !process.env[varName]);
 

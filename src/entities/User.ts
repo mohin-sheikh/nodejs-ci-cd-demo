@@ -4,11 +4,11 @@ import {
   Column,
   CreateDateColumn,
   UpdateDateColumn,
-  OneToMany,
+  Index,
 } from 'typeorm';
-import { Order } from './Order';
 
 @Entity('users')
+@Index(['email'], { unique: true })
 export class User {
   @PrimaryGeneratedColumn('uuid')
   id: string;
@@ -24,9 +24,6 @@ export class User {
 
   @Column({ default: true })
   isActive: boolean;
-
-  @OneToMany(() => Order, (order) => order.user)
-  orders: Order[];
 
   @CreateDateColumn()
   createdAt: Date;
