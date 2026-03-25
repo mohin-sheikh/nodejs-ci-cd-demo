@@ -2,26 +2,31 @@ module.exports = {
     preset: 'ts-jest',
     testEnvironment: 'node',
     roots: ['<rootDir>/src'],
-    testMatch: ['**/__tests__/**/*.ts', '**/?(*.)+(spec|test).ts'],
+    testMatch: [
+        '**/__tests__/**/*.test.ts',
+        '**/__tests__/**/*.spec.ts',
+        '**/__tests__/unit/**/*.test.ts',
+        '**/__tests__/integration/**/*.test.ts',
+    ],
     collectCoverageFrom: [
         'src/**/*.ts',
         '!src/**/*.d.ts',
         '!src/**/__tests__/**',
         '!src/server.ts',
+        '!src/config/data-source.ts',
     ],
     coverageThreshold: {
         global: {
-            // branches: 70,
             functions: 0,
             lines: 0,
-            statements: 0
-        }
+            statements: 0,
+            branches: 0,
+        },
     },
     coverageReporters: ['text', 'lcov', 'html'],
-    extensionsToTreatAsEsm: ['.ts'],
+    moduleFileExtensions: ['ts', 'js', 'json'],
     transform: {
-        '^.+\\.tsx?$': ['ts-jest', {
-            useESM: true,
-        }],
+        '^.+\\.ts$': 'ts-jest',
     },
+    passWithNoTests: false,
 };
