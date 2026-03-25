@@ -70,17 +70,17 @@ jobs:
     - name: Build project
       run: npm run build
     
-    # - name: Run tests with coverage
-    #   run: npm run test:coverage
-    #   env:
-    #     DB_HOST: localhost
-    #     DB_PORT: 5432
-    #     DB_USERNAME: postgres
-    #     DB_PASSWORD: postgres
-    #     DB_DATABASE: node_ts_demo
-    #     NODE_ENV: test
+    - name: Run tests with coverage
+      run: npm run test:coverage
+      env:
+        DB_HOST: localhost
+        DB_PORT: 5432
+        DB_USERNAME: postgres
+        DB_PASSWORD: postgres
+        DB_DATABASE: node_ts_demo
+        NODE_ENV: test
     
-    # - name: Upload coverage reports
+    - name: Upload coverage reports
       uses: codecov/codecov-action@v4
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
