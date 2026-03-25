@@ -11,21 +11,21 @@ export interface DatabaseConfig {
 }
 
 export interface AppConfig {
-  port: number;
+  port?: number; // Make port optional
   nodeEnv: string;
   database: DatabaseConfig;
 }
 
 export function validateConfig(): AppConfig {
-  // Validate PORT
-  if (!process.env.PORT) {
-    throw new Error('PORT environment variable is required');
-  }
-  const port = parseInt(process.env.PORT);
-  if (isNaN(port) || port < 1 || port > 65535) {
-    throw new Error(
-      `PORT must be a valid port number between 1 and 65535, got: ${process.env.PORT}`
-    );
+  // Validate PORT - only required if not in migration context
+  let port: number | undefined;
+  if (process.env.PORT) {
+    port = parseInt(process.env.PORT);
+    if (isNaN(port) || port < 1 || port > 65535) {
+      throw new Error(
+        `PORT must be a valid port number between 1 and 65535, got: ${process.env.PORT}`
+      );
+    }
   }
 
   // Validate NODE_ENV
