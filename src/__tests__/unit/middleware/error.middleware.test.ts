@@ -8,24 +8,19 @@ describe('Error Handler Middleware', () => {
   let originalNodeEnv: string | undefined;
 
   beforeEach(() => {
-    // Store original NODE_ENV
     originalNodeEnv = process.env.NODE_ENV;
 
-    // Setup mock request
     mockRequest = {};
 
-    // Setup mock response
     mockResponse = {
       status: jest.fn().mockReturnThis(),
       json: jest.fn(),
     };
 
-    // Setup mock next
     mockNext = jest.fn();
   });
 
   afterEach(() => {
-    // Restore original NODE_ENV
     process.env.NODE_ENV = originalNodeEnv;
   });
 

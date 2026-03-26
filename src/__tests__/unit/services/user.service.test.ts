@@ -2,7 +2,6 @@ import { UserService } from '../../../services/user.service';
 import { UserRepository } from '../../../repositories/user.repository';
 import { User } from '../../../entities/User';
 
-// Mock the UserRepository
 jest.mock('../../../repositories/user.repository');
 
 describe('UserService', () => {

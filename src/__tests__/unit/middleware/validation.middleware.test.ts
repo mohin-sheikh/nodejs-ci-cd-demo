@@ -12,20 +12,17 @@ describe('Validation Middleware', () => {
   let mockNext: jest.MockedFunction<NextFunction>;
 
   beforeEach(() => {
-    // Setup mock request
     mockRequest = {
       body: {},
       params: {},
       query: {},
     };
 
-    // Setup mock response
     mockResponse = {
       status: jest.fn().mockReturnThis(),
       json: jest.fn(),
     };
 
-    // Setup mock next
     mockNext = jest.fn();
   });
 
@@ -114,7 +111,6 @@ describe('Validation Middleware', () => {
       mockRequest.body = {
         name: 'John Doe',
         email: 'john@example.com',
-        // age is optional, so it's fine to omit
       };
 
       const middleware = validate(userSchema);
@@ -128,7 +124,7 @@ describe('Validation Middleware', () => {
       mockRequest.body = {
         name: 'John Doe',
         email: 'john@example.com',
-        age: 15, // Below minimum
+        age: 15,
       };
 
       const middleware = validate(userSchema);
@@ -262,7 +258,6 @@ describe('Validation Middleware', () => {
     it('should accept valid optional params', async () => {
       mockRequest.params = {
         id: '123e4567-e89b-12d3-a456-426614174000',
-        // userId is optional, so it's fine to omit
       };
 
       const middleware = validateParams(paramsSchema);
@@ -372,7 +367,6 @@ describe('Validation Middleware', () => {
         name: Joi.string().required(),
       });
 
-      // Simulate an unexpected error by causing validation to throw
       const originalValidate = schema.validate;
       schema.validate = jest.fn().mockImplementation(() => {
         throw new Error('Unexpected validation error');
@@ -385,7 +379,6 @@ describe('Validation Middleware', () => {
 
       expect(mockNext).toHaveBeenCalledWith(new Error('Unexpected validation error'));
 
-      // Restore original method
       schema.validate = originalValidate;
     });
   });

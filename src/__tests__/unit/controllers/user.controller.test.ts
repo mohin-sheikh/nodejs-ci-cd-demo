@@ -1,7 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { UserController } from '../../../api/controllers/user.controller';
 
-// Define the mock service type
 interface MockUserService {
   getAllUsers: jest.Mock;
   getUserById: jest.Mock;
@@ -10,9 +9,7 @@ interface MockUserService {
   deleteUser: jest.Mock;
 }
 
-// Mock the entire UserService module
 jest.mock('../../../services/user.service', () => {
-  // Create mock service inside the factory function
   const mockUserService: MockUserService = {
     getAllUsers: jest.fn(),
     getUserById: jest.fn(),
@@ -30,7 +27,6 @@ jest.mock('../../../services/user.service', () => {
   };
 });
 
-// Import after mock
 import { UserService } from '../../../services/user.service';
 
 describe('UserController', () => {
@@ -51,14 +47,11 @@ describe('UserController', () => {
   };
 
   beforeEach(() => {
-    // Get the mock service instance from the mock implementation
     const MockUserService = UserService as jest.Mock;
     mockUserService = MockUserService.mock.results[0]?.value || MockUserService();
 
-    // Clear all mock calls
     jest.clearAllMocks();
 
-    // Setup mock request, response, next
     mockRequest = {
       params: {},
       body: {},
@@ -70,7 +63,6 @@ describe('UserController', () => {
     };
     mockNext = jest.fn();
 
-    // Create controller instance
     userController = new UserController();
   });
 
