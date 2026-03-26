@@ -70,5 +70,8 @@
     "pg": "^8.20.0",
     "reflect-metadata": "^0.2.2",
     "typeorm": "^0.3.28"
+  },
+  "overrides": {
+    "brace-expansion": "5.0.5"
   }
 }
