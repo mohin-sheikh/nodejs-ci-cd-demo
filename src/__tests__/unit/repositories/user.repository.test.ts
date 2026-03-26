@@ -1,7 +1,7 @@
 import { UserRepository } from '../../../repositories/user.repository';
 import { AppDataSource } from '../../../config/database';
 import { User } from '../../../entities/User';
-import { Repository } from 'typeorm';
+import { Repository, UpdateResult, DeleteResult } from 'typeorm';
 
 jest.mock('../../../config/database', () => ({
   AppDataSource: {
@@ -194,7 +194,8 @@ describe('UserRepository', () => {
 
     it('should update user successfully', async () => {
       const updatedUser = { ...mockUser, ...updateData };
-      mockTypeOrmRepository.update.mockResolvedValue({ affected: 1 } as any);
+      const updateResult: UpdateResult = { affected: 1, raw: {}, generatedMaps: [] };
+      mockTypeOrmRepository.update.mockResolvedValue(updateResult);
       mockTypeOrmRepository.findOne.mockResolvedValue(updatedUser);
 
       const result = await userRepository.update(mockUser.id, updateData);
@@ -208,7 +209,8 @@ describe('UserRepository', () => {
     });
 
     it('should return null when updating non-existent user', async () => {
-      mockTypeOrmRepository.update.mockResolvedValue({ affected: 0 } as any);
+      const updateResult: UpdateResult = { affected: 0, raw: {}, generatedMaps: [] };
+      mockTypeOrmRepository.update.mockResolvedValue(updateResult);
       mockTypeOrmRepository.findOne.mockResolvedValue(null);
 
       const result = await userRepository.update('non-existent-id', updateData);
@@ -223,8 +225,9 @@ describe('UserRepository', () => {
     it('should update only provided fields', async () => {
       const partialUpdate = { name: 'Updated Name Only' };
       const updatedUser = { ...mockUser, ...partialUpdate };
+      const updateResult: UpdateResult = { affected: 1, raw: {}, generatedMaps: [] };
 
-      mockTypeOrmRepository.update.mockResolvedValue({ affected: 1 } as any);
+      mockTypeOrmRepository.update.mockResolvedValue(updateResult);
       mockTypeOrmRepository.findOne.mockResolvedValue(updatedUser);
 
       const result = await userRepository.update(mockUser.id, partialUpdate);
@@ -236,7 +239,8 @@ describe('UserRepository', () => {
 
   describe('delete', () => {
     it('should delete user successfully', async () => {
-      mockTypeOrmRepository.delete.mockResolvedValue({ affected: 1 } as any);
+      const deleteResult: DeleteResult = { affected: 1, raw: {} };
+      mockTypeOrmRepository.delete.mockResolvedValue(deleteResult);
 
       const result = await userRepository.delete(mockUser.id);
 
@@ -246,7 +250,8 @@ describe('UserRepository', () => {
     });
 
     it('should return false when user not found', async () => {
-      mockTypeOrmRepository.delete.mockResolvedValue({ affected: 0 } as any);
+      const deleteResult: DeleteResult = { affected: 0, raw: {} };
+      mockTypeOrmRepository.delete.mockResolvedValue(deleteResult);
 
       const result = await userRepository.delete('non-existent-id');
 
@@ -290,8 +295,9 @@ describe('UserRepository', () => {
     it('should handle update then find workflow', async () => {
       const updateData = { name: 'Updated Name' };
       const updatedUser = { ...mockUser, ...updateData };
+      const updateResult: UpdateResult = { affected: 1, raw: {}, generatedMaps: [] };
 
-      mockTypeOrmRepository.update.mockResolvedValue({ affected: 1 } as any);
+      mockTypeOrmRepository.update.mockResolvedValue(updateResult);
       mockTypeOrmRepository.findOne.mockResolvedValue(updatedUser);
 
       const result = await userRepository.update(mockUser.id, updateData);
