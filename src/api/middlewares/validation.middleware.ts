@@ -1,5 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
-import * as Joi from 'joi';
+import Joi from 'joi';
+import { ResponseHandler, ValidationError } from '../../utils/response';
+import { ResponseMessages } from '../../utils/responseMessages';
 
 export const validate = (schema: Joi.ObjectSchema) => {
   return async (req: Request, res: Response, next: NextFunction) => {
@@ -10,16 +12,12 @@ export const validate = (schema: Joi.ObjectSchema) => {
       });
 
       if (error) {
-        const details = error.details.map((detail) => ({
+        const details: ValidationError[] = error.details.map((detail) => ({
           field: detail.path.join('.'),
           message: detail.message,
         }));
 
-        res.status(400).json({
-          error: 'Validation failed',
-          details,
-        });
-        return;
+        return ResponseHandler.validationError(res, ResponseMessages.VALIDATION_FAILED, details);
       }
 
       req.body = value;
@@ -39,16 +37,12 @@ export const validateParams = (schema: Joi.ObjectSchema) => {
       });
 
       if (error) {
-        const details = error.details.map((detail) => ({
+        const details: ValidationError[] = error.details.map((detail) => ({
           field: detail.path.join('.'),
           message: detail.message,
         }));
 
-        res.status(400).json({
-          error: 'Invalid parameters',
-          details,
-        });
-        return;
+        return ResponseHandler.validationError(res, ResponseMessages.INVALID_PARAMETERS, details);
       }
 
       req.params = value;
@@ -68,16 +62,16 @@ export const validateQuery = (schema: Joi.ObjectSchema) => {
       });
 
       if (error) {
-        const details = error.details.map((detail) => ({
+        const details: ValidationError[] = error.details.map((detail) => ({
           field: detail.path.join('.'),
           message: detail.message,
         }));
 
-        res.status(400).json({
-          error: 'Invalid query parameters',
-          details,
-        });
-        return;
+        return ResponseHandler.validationError(
+          res,
+          ResponseMessages.INVALID_QUERY_PARAMETERS,
+          details
+        );
       }
 
       req.query = value;

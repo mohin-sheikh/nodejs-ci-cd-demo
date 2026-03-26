@@ -2,22 +2,28 @@ import express, { Application, Request, Response } from 'express';
 import userRoutes from './api/routes/user.routes';
 import { errorHandler } from './api/middlewares/error.middleware';
 import { AppDataSource } from './config/database';
+import { ResponseHandler } from './utils/response';
+import { ResponseMessages } from './utils/responseMessages';
 
 const app: Application = express();
 
 app.use(express.json());
 
 app.get('/health', (_req: Request, res: Response) => {
-  res.json({
+  const healthData = {
     status: 'OK',
-    timestamp: new Date().toISOString(),
     environment: process.env.NODE_ENV || 'development',
     database: AppDataSource.isInitialized ? 'connected' : 'disconnected',
-  });
+  };
+  return ResponseHandler.success(res, healthData, ResponseMessages.HEALTH_CHECK_PASSED);
 });
 
 app.get('/', (_req: Request, res: Response) => {
-  res.json({ message: 'Welcome to Node.js TypeScript CI/CD Demo API' });
+  return ResponseHandler.success(
+    res,
+    { message: 'Welcome to Node.js TypeScript CI/CD Demo API' },
+    ResponseMessages.API_RUNNING
+  );
 });
 
 app.use('/api/users', userRoutes);

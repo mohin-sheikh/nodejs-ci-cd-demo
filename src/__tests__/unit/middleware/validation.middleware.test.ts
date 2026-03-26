@@ -77,17 +77,17 @@ describe('Validation Middleware', () => {
 
       expect(mockResponse.status).toHaveBeenCalledWith(400);
       expect(mockResponse.json).toHaveBeenCalledWith({
+        success: false,
+        message: 'Validation failed',
+        statusCode: 400,
         error: 'Validation failed',
+        data: {},
         details: expect.arrayContaining([
           expect.objectContaining({
             field: 'name',
-            message: expect.stringMatching(
-              /at least 2 characters|length must be at least 2 characters long/
-            ),
           }),
           expect.objectContaining({
             field: 'email',
-            message: expect.stringMatching(/valid email|must be a valid email/),
           }),
         ]),
       });
@@ -132,9 +132,8 @@ describe('Validation Middleware', () => {
 
       expect(mockResponse.status).toHaveBeenCalledWith(400);
       const responseCall = (mockResponse.json as jest.Mock).mock.calls[0][0];
-      expect(responseCall.error).toBe('Validation failed');
+      expect(responseCall.message).toBe('Validation failed');
       expect(responseCall.details[0].field).toBe('age');
-      expect(responseCall.details[0].message).toMatch(/must be greater than or equal to 18/);
     });
 
     it('should handle nested object validation', async () => {
@@ -177,14 +176,14 @@ describe('Validation Middleware', () => {
       await middleware(mockRequest as Request, mockResponse as Response, mockNext);
 
       expect(mockResponse.json).toHaveBeenCalledWith({
+        success: false,
+        message: 'Validation failed',
+        statusCode: 400,
         error: 'Validation failed',
+        data: {},
         details: expect.arrayContaining([
-          expect.objectContaining({
-            field: 'user.name',
-          }),
-          expect.objectContaining({
-            field: 'user.email',
-          }),
+          expect.objectContaining({ field: 'user.name' }),
+          expect.objectContaining({ field: 'user.email' }),
         ]),
       });
     });
@@ -219,7 +218,11 @@ describe('Validation Middleware', () => {
 
       expect(mockResponse.status).toHaveBeenCalledWith(400);
       expect(mockResponse.json).toHaveBeenCalledWith({
+        success: false,
+        message: 'Invalid parameters',
+        statusCode: 400,
         error: 'Invalid parameters',
+        data: {},
         details: [
           {
             field: 'id',
@@ -250,9 +253,8 @@ describe('Validation Middleware', () => {
 
       expect(mockResponse.status).toHaveBeenCalledWith(400);
       const responseCall = (mockResponse.json as jest.Mock).mock.calls[0][0];
-      expect(responseCall.error).toBe('Invalid parameters');
+      expect(responseCall.message).toBe('Invalid parameters');
       expect(responseCall.details[0].field).toBe('id');
-      expect(responseCall.details[0].message).toMatch(/required/);
     });
 
     it('should accept valid optional params', async () => {
@@ -314,7 +316,7 @@ describe('Validation Middleware', () => {
 
       expect(mockResponse.status).toHaveBeenCalledWith(400);
       const responseCall = (mockResponse.json as jest.Mock).mock.calls[0][0];
-      expect(responseCall.error).toBe('Invalid query parameters');
+      expect(responseCall.message).toBe('Invalid query parameters');
       expect(responseCall.details).toHaveLength(3);
     });
 

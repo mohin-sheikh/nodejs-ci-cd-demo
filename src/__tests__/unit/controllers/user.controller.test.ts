@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { UserController } from '../../../api/controllers/user.controller';
+import { ResponseMessages } from '../../../utils/responseMessages';
 
 interface MockUserService {
   getAllUsers: jest.Mock;
@@ -74,8 +75,12 @@ describe('UserController', () => {
       await userController.getAllUsers(mockRequest as Request, mockResponse as Response, mockNext);
 
       expect(mockUserService.getAllUsers).toHaveBeenCalledTimes(1);
-      expect(mockResponse.json).toHaveBeenCalledWith({ users: mockUsers });
-      expect(mockResponse.status).not.toHaveBeenCalled();
+      expect(mockResponse.json).toHaveBeenCalledWith({
+        success: true,
+        message: ResponseMessages.USERS_RETRIEVED,
+        statusCode: 200,
+        data: mockUsers,
+      });
       expect(mockNext).not.toHaveBeenCalled();
     });
 
@@ -85,7 +90,12 @@ describe('UserController', () => {
       await userController.getAllUsers(mockRequest as Request, mockResponse as Response, mockNext);
 
       expect(mockUserService.getAllUsers).toHaveBeenCalledTimes(1);
-      expect(mockResponse.json).toHaveBeenCalledWith({ users: [] });
+      expect(mockResponse.json).toHaveBeenCalledWith({
+        success: true,
+        message: ResponseMessages.USERS_RETRIEVED,
+        statusCode: 200,
+        data: [],
+      });
     });
 
     it('should call next with error when service fails', async () => {
@@ -113,8 +123,12 @@ describe('UserController', () => {
       await userController.getUserById(mockRequest as Request, mockResponse as Response, mockNext);
 
       expect(mockUserService.getUserById).toHaveBeenCalledWith(userId);
-      expect(mockResponse.json).toHaveBeenCalledWith({ user: mockUser });
-      expect(mockResponse.status).not.toHaveBeenCalled();
+      expect(mockResponse.json).toHaveBeenCalledWith({
+        success: true,
+        message: ResponseMessages.USER_RETRIEVED,
+        statusCode: 200,
+        data: mockUser,
+      });
     });
 
     it('should return 404 when user not found', async () => {
@@ -124,7 +138,13 @@ describe('UserController', () => {
 
       expect(mockUserService.getUserById).toHaveBeenCalledWith(userId);
       expect(mockResponse.status).toHaveBeenCalledWith(404);
-      expect(mockResponse.json).toHaveBeenCalledWith({ error: 'User not found' });
+      expect(mockResponse.json).toHaveBeenCalledWith({
+        success: false,
+        message: ResponseMessages.USER_NOT_FOUND,
+        statusCode: 404,
+        error: ResponseMessages.USER_NOT_FOUND,
+        data: {},
+      });
     });
 
     it('should call next with error when service fails', async () => {
@@ -164,7 +184,12 @@ describe('UserController', () => {
 
       expect(mockUserService.createUser).toHaveBeenCalledWith(newUserData);
       expect(mockResponse.status).toHaveBeenCalledWith(201);
-      expect(mockResponse.json).toHaveBeenCalledWith({ user: createdUser });
+      expect(mockResponse.json).toHaveBeenCalledWith({
+        success: true,
+        message: ResponseMessages.USER_CREATED,
+        statusCode: 201,
+        data: createdUser,
+      });
     });
 
     it('should call next with error when service fails', async () => {
@@ -198,8 +223,12 @@ describe('UserController', () => {
       await userController.updateUser(mockRequest as Request, mockResponse as Response, mockNext);
 
       expect(mockUserService.updateUser).toHaveBeenCalledWith(userId, updateData);
-      expect(mockResponse.json).toHaveBeenCalledWith({ user: updatedUser });
-      expect(mockResponse.status).not.toHaveBeenCalled();
+      expect(mockResponse.json).toHaveBeenCalledWith({
+        success: true,
+        message: ResponseMessages.USER_UPDATED,
+        statusCode: 200,
+        data: updatedUser,
+      });
     });
 
     it('should return 404 when user not found', async () => {
@@ -209,7 +238,13 @@ describe('UserController', () => {
 
       expect(mockUserService.updateUser).toHaveBeenCalledWith(userId, updateData);
       expect(mockResponse.status).toHaveBeenCalledWith(404);
-      expect(mockResponse.json).toHaveBeenCalledWith({ error: 'User not found' });
+      expect(mockResponse.json).toHaveBeenCalledWith({
+        success: false,
+        message: ResponseMessages.USER_NOT_FOUND,
+        statusCode: 404,
+        error: ResponseMessages.USER_NOT_FOUND,
+        data: {},
+      });
     });
 
     it('should call next with error when service fails', async () => {
@@ -238,7 +273,11 @@ describe('UserController', () => {
 
       expect(mockUserService.deleteUser).toHaveBeenCalledWith(userId);
       expect(mockResponse.status).toHaveBeenCalledWith(204);
-      expect(mockResponse.send).toHaveBeenCalled();
+      expect(mockResponse.json).toHaveBeenCalledWith({
+        success: true,
+        message: ResponseMessages.USER_DELETED,
+        statusCode: 204,
+      });
     });
 
     it('should return 404 when user not found', async () => {
@@ -248,7 +287,13 @@ describe('UserController', () => {
 
       expect(mockUserService.deleteUser).toHaveBeenCalledWith(userId);
       expect(mockResponse.status).toHaveBeenCalledWith(404);
-      expect(mockResponse.json).toHaveBeenCalledWith({ error: 'User not found' });
+      expect(mockResponse.json).toHaveBeenCalledWith({
+        success: false,
+        message: ResponseMessages.USER_NOT_FOUND,
+        statusCode: 404,
+        error: ResponseMessages.USER_NOT_FOUND,
+        data: {},
+      });
     });
 
     it('should call next with error when service fails', async () => {
