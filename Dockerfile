@@ -1,50 +1,35 @@
-# Multi-stage build for Node.js TypeScript application
-
-# Build stage
 FROM node:18-alpine AS builder
 
 WORKDIR /app
 
-# Copy package files
 COPY package*.json ./
 COPY tsconfig.json ./
 
-# Install all dependencies (including dev dependencies)
 RUN npm ci
 
-# Copy source code
 COPY src ./src
 
-# Build the application (using docker-specific script that skips linting/tests)
 RUN npm run build:docker
 
-# Production stage
 FROM node:18-alpine
 
 WORKDIR /app
 
-# Copy package files
 COPY package*.json ./
 
-# Install production dependencies only (skip prepare script)
 RUN npm ci --omit=dev --ignore-scripts
 
-# Copy built application from builder stage
 COPY --from=builder /app/dist ./dist
 
-# Create a non-root user to run the app
 RUN addgroup -g 1001 -S nodejs && \
     adduser -S nodejs -u 1001 -G nodejs && \
     chown -R nodejs:nodejs /app
 
 USER nodejs
 
-# Expose the port the app runs on
 EXPOSE 3000
 
-# Health check
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
   CMD node -e "require('http').get('http://localhost:3000/health', (r) => {r.statusCode === 200 ? process.exit(0) : process.exit(1)})"
 
-# Start the application
 CMD ["node", "dist/server.js"]
