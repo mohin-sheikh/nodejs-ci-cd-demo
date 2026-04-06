@@ -1,4 +1,5 @@
 import Joi from 'joi';
+const passwordPattern = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,128}$/;
 
 export const createUserSchema = Joi.object({
   name: Joi.string().min(2).max(100).required().messages({
@@ -12,8 +13,11 @@ export const createUserSchema = Joi.object({
     'string.email': 'Please provide a valid email address',
     'any.required': 'Email is required',
   }),
-  password: Joi.string().min(6).required().messages({
-    'string.min': 'Password must be at least 6 characters',
+  password: Joi.string().min(8).max(128).pattern(passwordPattern).required().messages({
+    'string.min': 'Password must be at least 8 characters',
+    'string.max': 'Password cannot exceed 128 characters',
+    'string.pattern.base':
+      'Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character',
     'any.required': 'Password is required',
   }),
   isActive: Joi.boolean().optional(),
@@ -27,8 +31,11 @@ export const updateUserSchema = Joi.object({
   email: Joi.string().email().optional().messages({
     'string.email': 'Please provide a valid email address',
   }),
-  password: Joi.string().min(6).optional().messages({
-    'string.min': 'Password must be at least 6 characters',
+  password: Joi.string().min(8).max(128).pattern(passwordPattern).optional().messages({
+    'string.min': 'Password must be at least 8 characters',
+    'string.max': 'Password cannot exceed 128 characters',
+    'string.pattern.base':
+      'Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character',
   }),
   isActive: Joi.boolean().optional(),
 });

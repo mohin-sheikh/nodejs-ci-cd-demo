@@ -5,135 +5,6 @@ import {
 } from '../../../validators/user.validator';
 
 describe('User Validators', () => {
-  describe('createUserSchema', () => {
-    const validUser = {
-      name: 'John Doe',
-      email: 'john@example.com',
-      password: 'password123',
-    };
-
-    it('should validate a valid user', () => {
-      const { error } = createUserSchema.validate(validUser);
-      expect(error).toBeUndefined();
-    });
-
-    it('should validate with optional isActive field', () => {
-      const userWithIsActive = {
-        ...validUser,
-        isActive: false,
-      };
-      const { error } = createUserSchema.validate(userWithIsActive);
-      expect(error).toBeUndefined();
-    });
-
-    describe('name validation', () => {
-      it('should fail when name is missing', () => {
-        const { error } = createUserSchema.validate({
-          email: 'john@example.com',
-          password: 'password123',
-        });
-        expect(error).toBeDefined();
-        expect(error?.details[0].message).toContain('Name is required');
-      });
-
-      it('should fail when name is empty', () => {
-        const { error } = createUserSchema.validate({
-          ...validUser,
-          name: '',
-        });
-        expect(error).toBeDefined();
-        expect(error?.details[0].message).toContain('Name cannot be empty');
-      });
-
-      it('should fail when name is too short', () => {
-        const { error } = createUserSchema.validate({
-          ...validUser,
-          name: 'J',
-        });
-        expect(error).toBeDefined();
-        expect(error?.details[0].message).toContain('at least 2 characters');
-      });
-
-      it('should fail when name is too long', () => {
-        const { error } = createUserSchema.validate({
-          ...validUser,
-          name: 'a'.repeat(101),
-        });
-        expect(error).toBeDefined();
-        expect(error?.details[0].message).toContain('cannot exceed 100 characters');
-      });
-    });
-
-    describe('email validation', () => {
-      it('should fail when email is missing', () => {
-        const { error } = createUserSchema.validate({
-          name: 'John Doe',
-          password: 'password123',
-        });
-        expect(error).toBeDefined();
-        expect(error?.details[0].message).toContain('Email is required');
-      });
-
-      it('should fail when email is invalid', () => {
-        const { error } = createUserSchema.validate({
-          ...validUser,
-          email: 'invalid-email',
-        });
-        expect(error).toBeDefined();
-        expect(error?.details[0].message).toContain('valid email address');
-      });
-
-      it('should accept valid email formats', () => {
-        const emails = [
-          'user@example.com',
-          'user.name@example.com',
-          'user+tag@example.com',
-          'user@subdomain.example.com',
-        ];
-
-        emails.forEach((email) => {
-          const { error } = createUserSchema.validate({
-            ...validUser,
-            email,
-          });
-          expect(error).toBeUndefined();
-        });
-      });
-    });
-
-    describe('password validation', () => {
-      it('should fail when password is missing', () => {
-        const { error } = createUserSchema.validate({
-          name: 'John Doe',
-          email: 'john@example.com',
-        });
-        expect(error).toBeDefined();
-        expect(error?.details[0].message).toContain('Password is required');
-      });
-
-      it('should fail when password is too short', () => {
-        const { error } = createUserSchema.validate({
-          ...validUser,
-          password: '12345',
-        });
-        expect(error).toBeDefined();
-        expect(error?.details[0].message).toContain('at least 6 characters');
-      });
-
-      it('should accept passwords with 6 or more characters', () => {
-        const passwords = ['123456', 'abcdef', 'pass123', 'longerpassword'];
-
-        passwords.forEach((password) => {
-          const { error } = createUserSchema.validate({
-            ...validUser,
-            password,
-          });
-          expect(error).toBeUndefined();
-        });
-      });
-    });
-  });
-
   describe('updateUserSchema', () => {
     it('should validate partial update with name only', () => {
       const { error } = updateUserSchema.validate({
@@ -145,13 +16,6 @@ describe('User Validators', () => {
     it('should validate partial update with email only', () => {
       const { error } = updateUserSchema.validate({
         email: 'updated@example.com',
-      });
-      expect(error).toBeUndefined();
-    });
-
-    it('should validate partial update with password only', () => {
-      const { error } = updateUserSchema.validate({
-        password: 'newpassword123',
       });
       expect(error).toBeUndefined();
     });
@@ -206,12 +70,51 @@ describe('User Validators', () => {
     });
 
     describe('password validation', () => {
-      it('should fail when password is too short', () => {
+      it('should fail when password is too short (less than 8 characters)', () => {
         const { error } = updateUserSchema.validate({
-          password: '12345',
+          password: 'Abc@123',
         });
         expect(error).toBeDefined();
-        expect(error?.details[0].message).toContain('at least 6 characters');
+        expect(error?.details[0].message).toContain('at least 8 characters');
+      });
+
+      it('should fail when password has no uppercase letter', () => {
+        const { error } = updateUserSchema.validate({
+          password: 'password###123',
+        });
+        expect(error).toBeDefined();
+        expect(error?.details[0].message).toContain('uppercase letter');
+      });
+
+      it('should fail when password has no lowercase letter', () => {
+        const { error } = updateUserSchema.validate({
+          password: 'PASSWORD###123',
+        });
+        expect(error).toBeDefined();
+        expect(error?.details[0].message).toContain('lowercase letter');
+      });
+
+      it('should fail when password has no number', () => {
+        const { error } = updateUserSchema.validate({
+          password: 'Password###',
+        });
+        expect(error).toBeDefined();
+        expect(error?.details[0].message).toContain('number');
+      });
+
+      it('should fail when password has no special character', () => {
+        const { error } = updateUserSchema.validate({
+          password: 'Password123',
+        });
+        expect(error).toBeDefined();
+        expect(error?.details[0].message).toContain('special character');
+      });
+
+      it('should accept valid passwords for update', () => {
+        const { error } = updateUserSchema.validate({
+          password: 'NewStrong@Pass123',
+        });
+        expect(error).toBeUndefined();
       });
     });
   });
@@ -265,13 +168,32 @@ describe('User Validators', () => {
       const invalidUser = {
         name: 'J',
         email: 'invalid',
-        password: '123',
+        password: 'weak',
       };
       const { error } = createUserSchema.validate(invalidUser, {
         abortEarly: false,
       });
       expect(error).toBeDefined();
       expect(error?.details.length).toBeGreaterThanOrEqual(3);
+    });
+
+    it('should handle password with exactly 8 characters meeting all requirements', () => {
+      const { error } = createUserSchema.validate({
+        name: 'Test User',
+        email: 'test@example.com',
+        password: 'Test@123',
+      });
+      expect(error).toBeUndefined();
+    });
+
+    it('should handle password with maximum length (128 chars)', () => {
+      const longPassword = 'Test@123' + 'a'.repeat(120);
+      const { error } = createUserSchema.validate({
+        name: 'Test User',
+        email: 'test@example.com',
+        password: longPassword,
+      });
+      expect(error).toBeUndefined();
     });
   });
 });

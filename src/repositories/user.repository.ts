@@ -30,4 +30,12 @@ export class UserRepository {
     const result = await this.repository.delete(id);
     return result.affected !== 0;
   }
+
+  async findByEmailWithPassword(email: string): Promise<User | null> {
+    return await this.repository
+      .createQueryBuilder('user')
+      .addSelect('user.password')
+      .where('user.email = :email', { email })
+      .getOne();
+  }
 }

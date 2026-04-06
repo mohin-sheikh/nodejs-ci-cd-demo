@@ -11,10 +11,10 @@
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
-    "lint": "eslint \"src/**/*.{js,ts}\"",
-    "lint:fix": "eslint \"src/**/*.{js,ts}\" --fix",
-    "format": "prettier --write \"src/**/*.{js,ts,json}\"",
-    "format:check": "prettier --check \"src/**/*.{js,ts,json}\"",
+    "lint": "eslint src --ext .ts",
+    "lint:fix": "eslint src --ext .ts --fix",
+    "format": "prettier --write \"src/**/*.ts\"",
+    "format:check": "prettier --check \"src/**/*.ts\"",
     "prebuild": "npm run lint && npm run format:check",
     "prepare": "husky",
     "typeorm": "typeorm-ts-node-commonjs",
@@ -25,11 +25,8 @@
     "migration:show": "npm run typeorm -- migration:show -d src/config/database.ts"
   },
   "lint-staged": {
-    "src/**/*.{js,ts}": [
+    "src/**/*.ts": [
       "eslint --fix",
-      "prettier --write"
-    ],
-    "src/**/*.json": [
       "prettier --write"
     ]
   },
@@ -64,6 +61,7 @@
     "typescript": "5.5.4"
   },
   "dependencies": {
+    "argon2": "^0.44.0",
     "dotenv": "^17.3.1",
     "express": "^4.21.2",
     "joi": "^18.1.1",
@@ -72,6 +70,9 @@
     "typeorm": "^0.3.28"
   },
   "overrides": {
+    "brace-expansion": "5.0.5"
+  },
+  "resolutions": {
     "brace-expansion": "5.0.5"
   }
 }
