@@ -21,8 +21,23 @@ module.exports = {
     moduleFileExtensions: ['ts', 'js', 'json'],
     transform: {
         '^.+\\.ts$': ['ts-jest', {
-            tsconfig: 'tsconfig.test.json',
+            tsconfig: 'tsconfig.test.json'
         }],
     },
+    // Ignore node_modules except those that need transformation
+    transformIgnorePatterns: [
+        'node_modules/(?!(uuid|@nestjs|typeorm)/)' // Add packages that use ESM
+    ],
+    // Mock problematic modules
+    moduleNameMapper: {
+        '^uuid$': '<rootDir>/node_modules/uuid/dist/index.js',
+        // If you have other ESM issues, add them here
+    },
+    // Setup files
+    setupFilesAfterEnv: ['<rootDir>/src/__tests__/setup.ts'],
+    // Clear mocks between tests
+    clearMocks: true,
+    resetMocks: true,
+    restoreMocks: true,
     passWithNoTests: false,
 };

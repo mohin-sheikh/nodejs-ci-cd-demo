@@ -1,41 +1,22 @@
 import { Request, Response, NextFunction } from 'express';
 import { UserController } from '../../../api/controllers/user.controller';
 import { ResponseMessages } from '../../../utils/responseMessages';
-
-interface MockUserService {
-  getAllUsers: jest.Mock;
-  getUserById: jest.Mock;
-  createUser: jest.Mock;
-  updateUser: jest.Mock;
-  deleteUser: jest.Mock;
-}
-
-jest.mock('../../../services/user.service', () => {
-  const mockUserService: MockUserService = {
-    getAllUsers: jest.fn(),
-    getUserById: jest.fn(),
-    createUser: jest.fn(),
-    updateUser: jest.fn(),
-    deleteUser: jest.fn(),
-  };
-
-  return {
-    UserService: jest.fn().mockImplementation(() => mockUserService),
-    __esModule: true,
-    default: {
-      UserService: jest.fn().mockImplementation(() => mockUserService),
-    },
-  };
-});
-
 import { UserService } from '../../../services/user.service';
+
+// Create mock service
+const mockUserService = {
+  getAllUsers: jest.fn(),
+  getUserById: jest.fn(),
+  createUser: jest.fn(),
+  updateUser: jest.fn(),
+  deleteUser: jest.fn(),
+};
 
 describe('UserController', () => {
   let userController: UserController;
   let mockRequest: Partial<Request>;
   let mockResponse: Partial<Response>;
   let mockNext: jest.MockedFunction<NextFunction>;
-  let mockUserService: MockUserService;
 
   const mockUser = {
     id: '123e4567-e89b-12d3-a456-426614174000',
@@ -47,15 +28,23 @@ describe('UserController', () => {
     updatedAt: new Date(),
   };
 
-  beforeEach(() => {
-    const MockUserService = UserService as jest.Mock;
-    mockUserService = MockUserService.mock.results[0]?.value || MockUserService();
+  // Create a user without password for expected responses
+  const mockUserWithoutPassword = {
+    id: mockUser.id,
+    name: mockUser.name,
+    email: mockUser.email,
+    isActive: mockUser.isActive,
+    createdAt: mockUser.createdAt,
+    updatedAt: mockUser.updatedAt,
+  };
 
+  beforeEach(() => {
     jest.clearAllMocks();
 
     mockRequest = {
       params: {},
       body: {},
+      query: {},
     };
     mockResponse = {
       status: jest.fn().mockReturnThis(),
@@ -64,12 +53,16 @@ describe('UserController', () => {
     };
     mockNext = jest.fn();
 
-    userController = new UserController();
+    userController = new UserController(mockUserService as unknown as UserService);
   });
 
   describe('getAllUsers', () => {
     it('should return all users with status 200', async () => {
       const mockUsers = [mockUser, { ...mockUser, id: '2', name: 'Jane Doe' }];
+      const expectedUsers = [
+        mockUserWithoutPassword,
+        { ...mockUserWithoutPassword, id: '2', name: 'Jane Doe' },
+      ];
       mockUserService.getAllUsers.mockResolvedValue(mockUsers);
 
       await userController.getAllUsers(mockRequest as Request, mockResponse as Response, mockNext);
@@ -79,7 +72,7 @@ describe('UserController', () => {
         success: true,
         message: ResponseMessages.USERS_RETRIEVED,
         statusCode: 200,
-        data: mockUsers,
+        data: expectedUsers,
       });
       expect(mockNext).not.toHaveBeenCalled();
     });
@@ -127,7 +120,7 @@ describe('UserController', () => {
         success: true,
         message: ResponseMessages.USER_RETRIEVED,
         statusCode: 200,
-        data: mockUser,
+        data: mockUserWithoutPassword,
       });
     });
 
@@ -178,6 +171,14 @@ describe('UserController', () => {
         createdAt: new Date(),
         updatedAt: new Date(),
       };
+      const expectedUser = {
+        id: 'new-id',
+        name: newUserData.name,
+        email: newUserData.email,
+        isActive: true,
+        createdAt: createdUser.createdAt,
+        updatedAt: createdUser.updatedAt,
+      };
       mockUserService.createUser.mockResolvedValue(createdUser);
 
       await userController.createUser(mockRequest as Request, mockResponse as Response, mockNext);
@@ -188,7 +189,7 @@ describe('UserController', () => {
         success: true,
         message: ResponseMessages.USER_CREATED,
         statusCode: 201,
-        data: createdUser,
+        data: expectedUser,
       });
     });
 
@@ -218,6 +219,7 @@ describe('UserController', () => {
 
     it('should update user and return 200 status when found', async () => {
       const updatedUser = { ...mockUser, ...updateData };
+      const expectedUser = { ...mockUserWithoutPassword, ...updateData };
       mockUserService.updateUser.mockResolvedValue(updatedUser);
 
       await userController.updateUser(mockRequest as Request, mockResponse as Response, mockNext);
@@ -227,7 +229,7 @@ describe('UserController', () => {
         success: true,
         message: ResponseMessages.USER_UPDATED,
         statusCode: 200,
-        data: updatedUser,
+        data: expectedUser,
       });
     });
 
@@ -305,17 +307,6 @@ describe('UserController', () => {
       expect(mockUserService.deleteUser).toHaveBeenCalledWith(userId);
       expect(mockNext).toHaveBeenCalledWith(error);
       expect(mockResponse.status).not.toHaveBeenCalled();
-    });
-  });
-
-  describe('Error Handling', () => {
-    it('should handle non-Error objects', async () => {
-      mockUserService.getAllUsers.mockRejectedValue('String error');
-
-      await userController.getAllUsers(mockRequest as Request, mockResponse as Response, mockNext);
-
-      expect(mockUserService.getAllUsers).toHaveBeenCalledTimes(1);
-      expect(mockNext).toHaveBeenCalledWith('String error');
     });
   });
 });

@@ -8,7 +8,8 @@
         "noEmit": true,
         "esModuleInterop": true,
         "allowSyntheticDefaultImports": true,
-        "module": "commonjs"
+        "module": "commonjs",
+        "isolatedModules": true
     },
     "include": [
         "src/**/*.test.ts",

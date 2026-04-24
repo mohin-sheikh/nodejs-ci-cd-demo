@@ -1,4 +1,5 @@
 import express, { Application, Request, Response } from 'express';
+import cors from 'cors';
 import userRoutes from './api/routes/user.routes';
 import { errorHandler } from './api/middlewares/error.middleware';
 import { AppDataSource } from './config/database';
@@ -8,6 +9,16 @@ import { ResponseMessages } from './utils/responseMessages';
 const app: Application = express();
 
 app.use(express.json());
+
+app.use(
+  cors({
+    origin:
+      process.env.NODE_ENV === 'production'
+        ? process.env.ALLOWED_ORIGINS?.split(',') || 'https://yourdomain.com'
+        : '*',
+    credentials: true,
+  })
+);
 
 app.get('/health', (_req: Request, res: Response) => {
   const healthData = {
@@ -27,6 +38,10 @@ app.get('/', (_req: Request, res: Response) => {
 });
 
 app.use('/api/users', userRoutes);
+
+app.use('*', (req: Request, res: Response) => {
+  ResponseHandler.notFound(res, `Cannot ${req.method} ${req.originalUrl}`);
+});
 
 app.use(errorHandler);
 

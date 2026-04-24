@@ -22,7 +22,14 @@
     "migration:create": "npm run typeorm -- migration:create",
     "migration:run": "npm run typeorm -- migration:run -d src/config/database.ts",
     "migration:revert": "npm run typeorm -- migration:revert -d src/config/database.ts",
-    "migration:show": "npm run typeorm -- migration:show -d src/config/database.ts"
+    "migration:show": "npm run typeorm -- migration:show -d src/config/database.ts",
+    "db:reset": "npm run migration:revert && npm run migration:run",
+    "db:seed": "ts-node src/seeders/user.seeder.ts",
+    "test:integration": "jest --config jest.config.js --testPathPattern=integration",
+    "test:watch:coverage": "jest --coverage --watch",
+    "docker:up": "docker-compose up -d",
+    "docker:down": "docker-compose down",
+    "docker:logs": "docker-compose logs -f"
   },
   "lint-staged": {
     "src/**/*.ts": [
@@ -40,6 +47,7 @@
   "license": "MIT",
   "devDependencies": {
     "@eslint/js": "^9.21.0",
+    "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6",
     "@types/jest": "^29.5.14",
     "@types/joi": "^17.2.2",
@@ -62,6 +70,7 @@
   },
   "dependencies": {
     "argon2": "^0.44.0",
+    "cors": "^2.8.6",
     "dotenv": "^17.3.1",
     "express": "^4.21.2",
     "joi": "^18.1.1",
@@ -71,7 +80,7 @@
   },
   "overrides": {
     "brace-expansion": "5.0.5",
-    "uuid": "14.0.0"
+    "uuid": "9.0.1"
   },
   "resolutions": {
     "brace-expansion": "5.0.5"
