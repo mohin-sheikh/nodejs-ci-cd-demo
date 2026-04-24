@@ -34,14 +34,12 @@ describe('User API Integration Tests', () => {
     it('should return 409 for duplicate email', async () => {
       const email = `duplicate${Date.now()}@example.com`;
 
-      // Create first user
       await request(app).post('/api/users').send({
         name: 'First User',
         email,
         password: 'Test@123456',
       });
 
-      // Try to create duplicate
       const response = await request(app)
         .post('/api/users')
         .send({
@@ -57,7 +55,6 @@ describe('User API Integration Tests', () => {
 
   describe('GET /api/users/:id', () => {
     it('should return user by id', async () => {
-      // Create a user first
       const createResponse = await request(app)
         .post('/api/users')
         .send({
@@ -68,7 +65,6 @@ describe('User API Integration Tests', () => {
 
       const userId = createResponse.body.data.id;
 
-      // Get the user
       const getResponse = await request(app).get(`/api/users/${userId}`).expect(200);
 
       expect(getResponse.body.data.id).toBe(userId);

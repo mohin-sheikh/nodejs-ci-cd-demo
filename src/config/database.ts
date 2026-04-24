@@ -1,5 +1,5 @@
 import { DataSource } from 'typeorm';
-import { User } from '../entities/User';
+import { User } from '../entities/user.entity.';
 import { config } from './validate';
 
 export const AppDataSource = new DataSource({

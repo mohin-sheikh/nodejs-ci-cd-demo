@@ -1,6 +1,6 @@
 import { UserService } from '../../../services/user.service';
 import { UserRepository } from '../../../repositories/user.repository';
-import { User } from '../../../entities/User';
+import { User } from '../../../entities/user.entity.';
 import { PasswordService } from '../../../services/password.service';
 
 jest.mock('../../../services/password.service');
@@ -275,7 +275,7 @@ describe('UserService', () => {
       const result = await userService.validateUserCredentials(mockUser.email, 'Test@123456');
 
       expect(result).toBeDefined();
-      expect(result?.password).toBeUndefined(); // Password should be excluded
+      expect(result?.password).toBeUndefined();
       expect(mockUserRepository.findByEmailWithPassword).toHaveBeenCalledWith(mockUser.email);
       expect(PasswordService.verify).toHaveBeenCalledWith(userWithPassword.password, 'Test@123456');
     });

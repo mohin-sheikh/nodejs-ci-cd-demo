@@ -4,7 +4,7 @@ import { validate, validateParams } from '../middlewares/validation.middleware';
 import { createUserSchema, updateUserSchema, userIdSchema } from '../../validators/user.validator';
 
 const router = Router();
-const userController = new UserController(); // This will use default UserService
+const userController = new UserController();
 
 router.get('/', userController.getAllUsers.bind(userController));
 router.get('/:id', validateParams(userIdSchema), userController.getUserById.bind(userController));

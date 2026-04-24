@@ -2,9 +2,8 @@ import { Request, Response, NextFunction } from 'express';
 import { UserService } from '../../services/user.service';
 import { ResponseHandler } from '../../utils/response';
 import { ResponseMessages } from '../../utils/responseMessages';
-import { User } from '../../entities/User';
+import { User } from '../../entities/user.entity.';
 
-// Helper function to remove password from user object
 const removePassword = <T extends Partial<User>>(user: T): Omit<T, 'password'> => {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { password, ...userWithoutPassword } = user;

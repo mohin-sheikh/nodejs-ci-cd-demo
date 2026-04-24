@@ -1,5 +1,5 @@
 import { UserRepository } from '../repositories/user.repository';
-import { User } from '../entities/User';
+import { User } from '../entities/user.entity.';
 import { PasswordService } from './password.service';
 
 export class UserService {

@@ -12,10 +12,7 @@ app.use(express.json());
 
 app.use(
   cors({
-    origin:
-      process.env.NODE_ENV === 'production'
-        ? process.env.ALLOWED_ORIGINS?.split(',') || 'https://yourdomain.com'
-        : '*',
+    origin: process.env.NODE_ENV === 'production' ? process.env.ALLOWED_ORIGINS?.split(',') : '*',
     credentials: true,
   })
 );

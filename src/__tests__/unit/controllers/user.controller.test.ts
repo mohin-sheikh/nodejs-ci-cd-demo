@@ -3,7 +3,6 @@ import { UserController } from '../../../api/controllers/user.controller';
 import { ResponseMessages } from '../../../utils/responseMessages';
 import { UserService } from '../../../services/user.service';
 
-// Create mock service
 const mockUserService = {
   getAllUsers: jest.fn(),
   getUserById: jest.fn(),
@@ -28,7 +27,6 @@ describe('UserController', () => {
     updatedAt: new Date(),
   };
 
-  // Create a user without password for expected responses
   const mockUserWithoutPassword = {
     id: mockUser.id,
     name: mockUser.name,
