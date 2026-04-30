@@ -12,7 +12,6 @@ AppDataSource.initialize()
       console.log(`Server is running on port ${PORT}`);
       console.log(`Environment: ${config.nodeEnv}`);
       console.log(`Health check: http://localhost:${PORT}/health`);
-      console.log(`Users API: http://localhost:${PORT}/api/users`);
     });
   })
   .catch((error) => {

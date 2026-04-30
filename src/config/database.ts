@@ -11,7 +11,7 @@ export const AppDataSource = new DataSource({
   password: config.database.password,
   database: config.database.database,
   synchronize: false,
-  logging: config.nodeEnv === 'development',
+  logging: config.nodeEnv === 'development' ? ['error'] : false,
   entities: [User],
   migrations: ['src/migrations/*.ts'],
 });
