@@ -1,6 +1,6 @@
 import { UserRepository } from '../../../repositories/user.repository';
 import { AppDataSource } from '../../../config/database';
-import { User } from '../../../entities/User';
+import { User } from '../../../entities/user.entity';
 import { Repository, UpdateResult, DeleteResult } from 'typeorm';
 
 jest.mock('../../../config/database', () => ({

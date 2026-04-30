@@ -1,6 +1,6 @@
 import { UserService } from '../../../services/user.service';
 import { UserRepository } from '../../../repositories/user.repository';
-import { User } from '../../../entities/user.entity.';
+import { User } from '../../../entities/user.entity';
 import { PasswordService } from '../../../services/password.service';
 
 jest.mock('../../../services/password.service');

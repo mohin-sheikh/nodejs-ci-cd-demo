@@ -16,7 +16,6 @@ AppDataSource.initialize()
     });
   })
   .catch((error) => {
-    console.log('Error connecting to database:', error);
-    console.log('Please check your database configuration in .env file');
+    console.error('Error connecting to database:', error);
     process.exit(1);
   });
