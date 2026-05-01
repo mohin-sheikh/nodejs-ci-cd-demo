@@ -6,6 +6,7 @@ import { requestLogger } from './api/middlewares/logger.middleware';
 import { AppDataSource } from './config/database';
 import { ResponseHandler } from './utils/response';
 import { ResponseMessages } from './utils/responseMessages';
+import authRoutes from './api/routes/auth.routes';
 
 const app: Application = express();
 
@@ -38,6 +39,7 @@ app.get('/', (_req: Request, res: Response) => {
 });
 
 app.use('/api/users', userRoutes);
+app.use('/api/auth', authRoutes);
 
 app.use('*', (req: Request, res: Response) => {
   ResponseHandler.notFound(res, `Cannot ${req.method} ${req.originalUrl}`);
