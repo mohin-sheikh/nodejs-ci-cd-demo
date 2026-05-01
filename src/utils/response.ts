@@ -10,15 +10,13 @@ export interface ValidationError {
 export type DetailsType = ValidationError[] | Record<string, unknown>;
 
 export interface ApiResponse<T = Record<string, unknown>> {
-  success: boolean;
-  message: string;
   statusCode: number;
-  data?: T;
-  error?: string;
-  details?: DetailsType;
+  message: string;
+  data: T;
 }
 
 export interface PaginatedResponse<T> extends ApiResponse<T[]> {
+  data: T[];
   pagination: {
     page: number;
     limit: number;
@@ -37,9 +35,8 @@ export class ResponseHandler {
     statusCode: number = StatusCodes.OK
   ): Response {
     const response: ApiResponse<T> = {
-      success: true,
-      message,
       statusCode,
+      message,
       data,
     };
     return res.status(statusCode).json(response);
@@ -63,58 +60,49 @@ export class ResponseHandler {
 
   static noContent(res: Response, message: string = ResponseMessages.DELETED): Response {
     const response: ApiResponse = {
-      success: true,
-      message,
       statusCode: StatusCodes.NO_CONTENT,
+      message,
+      data: {},
     };
     return res.status(StatusCodes.NO_CONTENT).json(response);
   }
 
   static error(
     res: Response,
-    error: string | Error,
+    message: string,
     statusCode: number = StatusCodes.INTERNAL_SERVER_ERROR,
-    details?: DetailsType
+    data?: Record<string, unknown>
   ): Response {
-    const errorMessage = error instanceof Error ? error.message : error;
-
     const response: ApiResponse = {
-      success: false,
-      message: errorMessage,
       statusCode,
-      error: errorMessage,
-      data: {},
+      message,
+      data: data || {},
     };
-
-    if (details) {
-      response.details = details;
-    }
-
     return res.status(statusCode).json(response);
   }
 
-  static badRequest(res: Response, error: string, details?: DetailsType): Response {
-    return this.error(res, error, StatusCodes.BAD_REQUEST, details);
+  static badRequest(res: Response, message: string, data?: Record<string, unknown>): Response {
+    return this.error(res, message, StatusCodes.BAD_REQUEST, data);
   }
 
-  static unauthorized(res: Response, error: string = ResponseMessages.UNAUTHORIZED): Response {
-    return this.error(res, error, StatusCodes.UNAUTHORIZED);
+  static unauthorized(res: Response, message: string = ResponseMessages.UNAUTHORIZED): Response {
+    return this.error(res, message, StatusCodes.UNAUTHORIZED);
   }
 
-  static forbidden(res: Response, error: string = ResponseMessages.FORBIDDEN): Response {
-    return this.error(res, error, StatusCodes.FORBIDDEN);
+  static forbidden(res: Response, message: string = ResponseMessages.FORBIDDEN): Response {
+    return this.error(res, message, StatusCodes.FORBIDDEN);
   }
 
-  static notFound(res: Response, error: string = ResponseMessages.NOT_FOUND): Response {
-    return this.error(res, error, StatusCodes.NOT_FOUND);
+  static notFound(res: Response, message: string = ResponseMessages.NOT_FOUND): Response {
+    return this.error(res, message, StatusCodes.NOT_FOUND);
   }
 
-  static conflict(res: Response, error: string = ResponseMessages.USER_ALREADY_EXISTS): Response {
-    return this.error(res, error, StatusCodes.CONFLICT);
+  static conflict(res: Response, message: string = ResponseMessages.USER_ALREADY_EXISTS): Response {
+    return this.error(res, message, StatusCodes.CONFLICT);
   }
 
-  static validationError(res: Response, error: string, details?: DetailsType): Response {
-    return this.error(res, error, StatusCodes.BAD_REQUEST, details);
+  static validationError(res: Response, message: string, details?: ValidationError[]): Response {
+    return this.error(res, message, StatusCodes.BAD_REQUEST, { details });
   }
 
   static paginated<T = Record<string, unknown>>(
@@ -130,9 +118,8 @@ export class ResponseHandler {
     const hasPrev = page > 1;
 
     const response: PaginatedResponse<T> = {
-      success: true,
-      message,
       statusCode: StatusCodes.OK,
+      message,
       data,
       pagination: {
         page,

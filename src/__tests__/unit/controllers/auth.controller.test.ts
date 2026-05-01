@@ -56,7 +56,6 @@ describe('AuthController', () => {
 
       expect(mockAuthService.login).toHaveBeenCalledWith(loginData.email, loginData.password);
       expect(mockResponse.json).toHaveBeenCalledWith({
-        success: true,
         message: 'Login successful',
         statusCode: 200,
         data: mockLoginResponse,
@@ -72,10 +71,8 @@ describe('AuthController', () => {
       expect(mockAuthService.login).toHaveBeenCalledWith(loginData.email, loginData.password);
       expect(mockResponse.status).toHaveBeenCalledWith(401);
       expect(mockResponse.json).toHaveBeenCalledWith({
-        success: false,
         message: 'Invalid email or password',
         statusCode: 401,
-        error: 'Invalid email or password',
         data: {},
       });
     });

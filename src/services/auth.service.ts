@@ -21,31 +21,26 @@ export class AuthService {
       updatedAt: Date;
     };
   } | null> {
-    // Find user with password field included
     const user = await this.userRepository.findByEmailWithPassword(email);
 
     if (!user) {
       return null;
     }
 
-    // Check if user is active
     if (!user.isActive) {
       return null;
     }
 
-    // Verify password
     const isValid = await PasswordService.verify(user.password, password);
     if (!isValid) {
       return null;
     }
 
-    // Check if password needs rehashing
     if (await PasswordService.needsRehash(user.password)) {
       const newHash = await PasswordService.hash(password);
       await this.userRepository.update(user.id, { password: newHash });
     }
 
-    // Return user without password
     return {
       user: {
         id: user.id,

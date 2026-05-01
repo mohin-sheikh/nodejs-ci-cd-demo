@@ -1,12 +1,12 @@
 import express, { Application, Request, Response } from 'express';
 import cors from 'cors';
 import userRoutes from './api/routes/user.routes';
+import authRoutes from './api/routes/auth.routes';
 import { errorHandler } from './api/middlewares/error.middleware';
 import { requestLogger } from './api/middlewares/logger.middleware';
 import { AppDataSource } from './config/database';
 import { ResponseHandler } from './utils/response';
 import { ResponseMessages } from './utils/responseMessages';
-import authRoutes from './api/routes/auth.routes';
 
 const app: Application = express();
 

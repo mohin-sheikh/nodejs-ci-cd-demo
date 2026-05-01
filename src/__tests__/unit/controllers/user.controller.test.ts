@@ -67,7 +67,6 @@ describe('UserController', () => {
 
       expect(mockUserService.getAllUsers).toHaveBeenCalledTimes(1);
       expect(mockResponse.json).toHaveBeenCalledWith({
-        success: true,
         message: ResponseMessages.USERS_RETRIEVED,
         statusCode: 200,
         data: expectedUsers,
@@ -82,7 +81,6 @@ describe('UserController', () => {
 
       expect(mockUserService.getAllUsers).toHaveBeenCalledTimes(1);
       expect(mockResponse.json).toHaveBeenCalledWith({
-        success: true,
         message: ResponseMessages.USERS_RETRIEVED,
         statusCode: 200,
         data: [],
@@ -115,7 +113,6 @@ describe('UserController', () => {
 
       expect(mockUserService.getUserById).toHaveBeenCalledWith(userId);
       expect(mockResponse.json).toHaveBeenCalledWith({
-        success: true,
         message: ResponseMessages.USER_RETRIEVED,
         statusCode: 200,
         data: mockUserWithoutPassword,
@@ -130,10 +127,8 @@ describe('UserController', () => {
       expect(mockUserService.getUserById).toHaveBeenCalledWith(userId);
       expect(mockResponse.status).toHaveBeenCalledWith(404);
       expect(mockResponse.json).toHaveBeenCalledWith({
-        success: false,
         message: ResponseMessages.USER_NOT_FOUND,
         statusCode: 404,
-        error: ResponseMessages.USER_NOT_FOUND,
         data: {},
       });
     });
@@ -184,7 +179,6 @@ describe('UserController', () => {
       expect(mockUserService.createUser).toHaveBeenCalledWith(newUserData);
       expect(mockResponse.status).toHaveBeenCalledWith(201);
       expect(mockResponse.json).toHaveBeenCalledWith({
-        success: true,
         message: ResponseMessages.USER_CREATED,
         statusCode: 201,
         data: expectedUser,
@@ -224,7 +218,6 @@ describe('UserController', () => {
 
       expect(mockUserService.updateUser).toHaveBeenCalledWith(userId, updateData);
       expect(mockResponse.json).toHaveBeenCalledWith({
-        success: true,
         message: ResponseMessages.USER_UPDATED,
         statusCode: 200,
         data: expectedUser,
@@ -239,10 +232,8 @@ describe('UserController', () => {
       expect(mockUserService.updateUser).toHaveBeenCalledWith(userId, updateData);
       expect(mockResponse.status).toHaveBeenCalledWith(404);
       expect(mockResponse.json).toHaveBeenCalledWith({
-        success: false,
         message: ResponseMessages.USER_NOT_FOUND,
         statusCode: 404,
-        error: ResponseMessages.USER_NOT_FOUND,
         data: {},
       });
     });
@@ -274,9 +265,9 @@ describe('UserController', () => {
       expect(mockUserService.deleteUser).toHaveBeenCalledWith(userId);
       expect(mockResponse.status).toHaveBeenCalledWith(204);
       expect(mockResponse.json).toHaveBeenCalledWith({
-        success: true,
         message: ResponseMessages.USER_DELETED,
         statusCode: 204,
+        data: {},
       });
     });
 
@@ -288,10 +279,8 @@ describe('UserController', () => {
       expect(mockUserService.deleteUser).toHaveBeenCalledWith(userId);
       expect(mockResponse.status).toHaveBeenCalledWith(404);
       expect(mockResponse.json).toHaveBeenCalledWith({
-        success: false,
         message: ResponseMessages.USER_NOT_FOUND,
         statusCode: 404,
-        error: ResponseMessages.USER_NOT_FOUND,
         data: {},
       });
     });

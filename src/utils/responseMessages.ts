@@ -11,6 +11,8 @@ export enum ResponseMessages {
   USER_DELETED = 'User deleted successfully',
   HEALTH_CHECK_PASSED = 'Health check passed',
   API_RUNNING = 'API is running',
+  LOGIN_SUCCESS = 'Login successful',
+  INVALID_CREDENTIALS = 'Invalid email or password',
 
   BAD_REQUEST = 'Bad request',
   UNAUTHORIZED = 'Unauthorized access',

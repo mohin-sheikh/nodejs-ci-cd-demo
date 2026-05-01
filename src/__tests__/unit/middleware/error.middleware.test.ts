@@ -32,10 +32,8 @@ describe('Error Handler Middleware', () => {
 
       expect(mockResponse.status).toHaveBeenCalledWith(409);
       expect(mockResponse.json).toHaveBeenCalledWith({
-        success: false,
         message: 'User with this email already exists',
         statusCode: 409,
-        error: 'User with this email already exists',
         data: {},
       });
     });
@@ -57,10 +55,8 @@ describe('Error Handler Middleware', () => {
 
       expect(mockResponse.status).toHaveBeenCalledWith(404);
       expect(mockResponse.json).toHaveBeenCalledWith({
-        success: false,
         message: 'User not found',
         statusCode: 404,
-        error: 'User not found',
         data: {},
       });
     });
@@ -88,14 +84,11 @@ describe('Error Handler Middleware', () => {
         expect(mockResponse.status).toHaveBeenCalledWith(500);
         const responseCall = (mockResponse.json as jest.Mock).mock.calls[0][0];
         expect(responseCall).toMatchObject({
-          success: false,
-          message: 'Internal server error',
+          message: 'Something went wrong',
           statusCode: 500,
-          error: 'Internal server error',
           data: {},
         });
-        expect(responseCall.details).toBeDefined();
-        expect(responseCall.details.stack).toBeDefined();
+        expect(responseCall.data).toBeDefined();
       });
 
       it('should not call next', () => {
@@ -115,10 +108,8 @@ describe('Error Handler Middleware', () => {
 
         expect(mockResponse.status).toHaveBeenCalledWith(500);
         expect(mockResponse.json).toHaveBeenCalledWith({
-          success: false,
           message: 'Internal server error',
           statusCode: 500,
-          error: 'Internal server error',
           data: {},
         });
       });
@@ -134,10 +125,8 @@ describe('Error Handler Middleware', () => {
 
         expect(mockResponse.status).toHaveBeenCalledWith(500);
         expect(mockResponse.json).toHaveBeenCalledWith({
-          success: false,
           message: 'Internal server error',
           statusCode: 500,
-          error: 'Internal server error',
           data: {},
         });
       });
@@ -153,10 +142,8 @@ describe('Error Handler Middleware', () => {
 
       expect(mockResponse.status).toHaveBeenCalledWith(500);
       expect(mockResponse.json).toHaveBeenCalledWith({
-        success: false,
         message: 'Internal server error',
         statusCode: 500,
-        error: 'Internal server error',
         data: {},
       });
     });
@@ -169,26 +156,22 @@ describe('Error Handler Middleware', () => {
 
       errorHandler(emailError, mockRequest as Request, mockResponse as Response, mockNext);
       expect(mockResponse.json).toHaveBeenCalledWith({
-        success: false,
         message: 'User with this email already exists',
         statusCode: 409,
-        error: 'User with this email already exists',
         data: {},
       });
 
       errorHandler(notFoundError, mockRequest as Request, mockResponse as Response, mockNext);
       expect(mockResponse.json).toHaveBeenCalledWith({
-        success: false,
         message: 'User not found',
         statusCode: 404,
-        error: 'User not found',
         data: {},
       });
     });
   });
 
   describe('Response Structure', () => {
-    it('should always return a JSON response', () => {
+    it('should always return a JSON response with statusCode, message, and data', () => {
       const error = new Error('Any error');
 
       errorHandler(error, mockRequest as Request, mockResponse as Response, mockNext);
@@ -196,9 +179,11 @@ describe('Error Handler Middleware', () => {
       expect(mockResponse.json).toHaveBeenCalled();
       const response = (mockResponse.json as jest.Mock).mock.calls[0][0];
       expect(typeof response).toBe('object');
-      expect(response).toHaveProperty('success');
       expect(response).toHaveProperty('message');
       expect(response).toHaveProperty('statusCode');
+      expect(response).toHaveProperty('data');
+      expect(response).not.toHaveProperty('success');
+      expect(response).not.toHaveProperty('error');
     });
   });
 });

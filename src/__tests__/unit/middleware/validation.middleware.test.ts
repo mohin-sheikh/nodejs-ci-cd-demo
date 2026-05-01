@@ -77,19 +77,18 @@ describe('Validation Middleware', () => {
 
       expect(mockResponse.status).toHaveBeenCalledWith(400);
       expect(mockResponse.json).toHaveBeenCalledWith({
-        success: false,
-        message: 'Validation failed',
         statusCode: 400,
-        error: 'Validation failed',
-        data: {},
-        details: expect.arrayContaining([
-          expect.objectContaining({
-            field: 'name',
-          }),
-          expect.objectContaining({
-            field: 'email',
-          }),
-        ]),
+        message: 'Validation failed',
+        data: {
+          details: expect.arrayContaining([
+            expect.objectContaining({
+              field: 'name',
+            }),
+            expect.objectContaining({
+              field: 'email',
+            }),
+          ]),
+        },
       });
       expect(mockNext).not.toHaveBeenCalled();
     });
@@ -104,7 +103,7 @@ describe('Validation Middleware', () => {
       await middleware(mockRequest as Request, mockResponse as Response, mockNext);
 
       const response = (mockResponse.json as jest.Mock).mock.calls[0][0];
-      expect(response.details.length).toBeGreaterThanOrEqual(2);
+      expect(response.data.details.length).toBeGreaterThanOrEqual(2);
     });
 
     it('should handle optional fields correctly', async () => {
@@ -133,7 +132,7 @@ describe('Validation Middleware', () => {
       expect(mockResponse.status).toHaveBeenCalledWith(400);
       const responseCall = (mockResponse.json as jest.Mock).mock.calls[0][0];
       expect(responseCall.message).toBe('Validation failed');
-      expect(responseCall.details[0].field).toBe('age');
+      expect(responseCall.data.details[0].field).toBe('age');
     });
 
     it('should handle nested object validation', async () => {
@@ -176,15 +175,14 @@ describe('Validation Middleware', () => {
       await middleware(mockRequest as Request, mockResponse as Response, mockNext);
 
       expect(mockResponse.json).toHaveBeenCalledWith({
-        success: false,
-        message: 'Validation failed',
         statusCode: 400,
-        error: 'Validation failed',
-        data: {},
-        details: expect.arrayContaining([
-          expect.objectContaining({ field: 'user.name' }),
-          expect.objectContaining({ field: 'user.email' }),
-        ]),
+        message: 'Validation failed',
+        data: {
+          details: expect.arrayContaining([
+            expect.objectContaining({ field: 'user.name' }),
+            expect.objectContaining({ field: 'user.email' }),
+          ]),
+        },
       });
     });
   });
@@ -218,17 +216,16 @@ describe('Validation Middleware', () => {
 
       expect(mockResponse.status).toHaveBeenCalledWith(400);
       expect(mockResponse.json).toHaveBeenCalledWith({
-        success: false,
-        message: 'Invalid parameters',
         statusCode: 400,
-        error: 'Invalid parameters',
-        data: {},
-        details: [
-          {
-            field: 'id',
-            message: '"id" must be a valid GUID',
-          },
-        ],
+        message: 'Invalid parameters',
+        data: {
+          details: [
+            {
+              field: 'id',
+              message: '"id" must be a valid GUID',
+            },
+          ],
+        },
       });
     });
 
@@ -254,7 +251,7 @@ describe('Validation Middleware', () => {
       expect(mockResponse.status).toHaveBeenCalledWith(400);
       const responseCall = (mockResponse.json as jest.Mock).mock.calls[0][0];
       expect(responseCall.message).toBe('Invalid parameters');
-      expect(responseCall.details[0].field).toBe('id');
+      expect(responseCall.data.details[0].field).toBe('id');
     });
 
     it('should accept valid optional params', async () => {
@@ -317,7 +314,7 @@ describe('Validation Middleware', () => {
       expect(mockResponse.status).toHaveBeenCalledWith(400);
       const responseCall = (mockResponse.json as jest.Mock).mock.calls[0][0];
       expect(responseCall.message).toBe('Invalid query parameters');
-      expect(responseCall.details).toHaveLength(3);
+      expect(responseCall.data.details).toHaveLength(3);
     });
 
     it('should convert string numbers to actual numbers', async () => {
