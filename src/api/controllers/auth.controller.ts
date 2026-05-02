@@ -47,7 +47,7 @@ export class AuthController {
 
   async getCurrentUser(req: Request, res: Response, next: NextFunction) {
     try {
-      if (!req.user) {
+      if (!req['user']) {
         return ResponseHandler.unauthorized(res, 'User not authenticated');
       }
 
