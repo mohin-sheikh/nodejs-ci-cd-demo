@@ -51,7 +51,7 @@ export class AuthController {
         return ResponseHandler.unauthorized(res, 'User not authenticated');
       }
 
-      return ResponseHandler.success(res, { user: req.user }, 'Current user retrieved');
+      return ResponseHandler.success(res, { user: req['user'] }, 'Current user retrieved');
     } catch (error) {
       next(error);
     }
