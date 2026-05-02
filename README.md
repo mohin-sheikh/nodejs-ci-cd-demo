@@ -1,241 +1,638 @@
-# Node.js TypeScript CI/CD Pipeline Demo
+# Node.js TypeScript CI/CD Pipeline with PostgreSQL and JWT Authentication
 
-<div align="center">
+## Project Overview
 
-[![CI/CD Pipeline](https://github.com/mohin-sheikh/nodejs-ci-cd-demo/actions/workflows/ci-cd.yml/badge.svg)](https://github.com/mohin-sheikh/nodejs-ci-cd-demo/actions/workflows/ci-cd.yml)
-[![Docker Pulls](https://img.shields.io/docker/pulls/mohinsheikh/node-ts-cicd-demo)](https://hub.docker.com/r/mohinsheikh/node-ts-cicd-demo)
-[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-[![Node Version](https://img.shields.io/badge/node-18.x-green.svg)](https://nodejs.org/)
-[![TypeScript](https://img.shields.io/badge/typescript-5.5.4-blue.svg)](https://www.typescriptlang.org/)
-
-**A production-ready Node.js TypeScript application with a complete CI/CD pipeline including testing, linting, security scanning, and Docker deployment.**
-
-[Features](#features) • 
-[Quick Start](#quick-start) • 
-[Architecture](#architecture) • 
-[CI/CD Pipeline](#cicd-pipeline) • 
-[Docker](#docker) • 
-[Contributing](#contributing)
-
-</div>
-
----
-
-## Table of Contents
-
-- [Features](#features)
-- [Technology Stack](#technology-stack)
-- [Quick Start](#quick-start)
-- [Project Structure](#project-structure)
-- [Installation](#installation)
-- [Available Scripts](#available-scripts)
-- [API Endpoints](#api-endpoints)
-- [Testing](#testing)
-- [Code Quality](#code-quality)
-- [CI/CD Pipeline](#cicd-pipeline)
-- [Docker](#docker)
-- [Environment Variables](#environment-variables)
-- [Deployment](#deployment)
-- [Troubleshooting](#troubleshooting)
-- [Contributing](#contributing)
-- [License](#license)
-- [Author](#author)
-
----
-
-## Features
-
-- **TypeScript** - Type-safe JavaScript for better development experience
-- **Express.js** - Fast, unopinionated web framework for Node.js
-- **Jest Testing** - Complete testing setup with coverage reports
-- **ESLint + Prettier** - Code quality and formatting tools
-- **Git Hooks** - Pre-commit hooks using Husky and lint-staged
-- **GitHub Actions** - Automated CI/CD pipeline
-- **Docker** - Multi-stage builds for production-ready images
-- **Security Scanning** - npm audit for vulnerability detection
-- **Health Checks** - Built-in health check endpoint for monitoring
-- **Production Ready** - Following industry best practices
-
----
+This is a production-ready Node.js TypeScript application featuring a complete CI/CD pipeline, PostgreSQL database integration, JWT-based authentication, and comprehensive testing. The project demonstrates modern backend development practices with a focus on security, maintainability, and automated deployments.
 
 ## Technology Stack
 
 | Category | Technology | Version |
 |----------|------------|---------|
-| **Runtime** | Node.js | 18.x |
-| **Language** | TypeScript | 5.5.4 |
-| **Framework** | Express | 4.21.2 |
-| **Testing** | Jest | 29.7.0 |
-| **Linting** | ESLint | 8.57.1 |
-| **Formatting** | Prettier | 3.5.3 |
-| **Container** | Docker | 28.0+ |
-| **CI/CD** | GitHub Actions | - |
-| **Registry** | Docker Hub | - |
-
----
-
-## Quick Start
-
-### Prerequisites
-
-- Node.js (v18 or higher)
-- npm (v9 or higher)
-- Git
-- Docker (optional, for containerization)
-
-### Clone and Run
-
-```bash
-# Clone the repository
-git clone https://github.com/mohin-sheikh/nodejs-ci-cd-demo.git
-cd nodejs-ci-cd-demo
-
-# Install dependencies
-npm install
-
-# Start development server
-npm run dev
-
-# Build for production
-npm run build
-npm start
-```
-
-Your application will be running at `http://localhost:3000`
-
----
+| Runtime | Node.js | 18.x / 22.x |
+| Language | TypeScript | 5.5.4 |
+| Framework | Express | 4.21.2 |
+| Database ORM | TypeORM | 0.3.28 |
+| Database | PostgreSQL | 15 |
+| Authentication | JWT | 9.0.3 |
+| Password Hashing | Argon2 | 0.44.0 |
+| Validation | Joi | 18.1.1 |
+| Testing | Jest | 29.7.0 |
+| Linting | ESLint | 8.57.1 |
+| Formatting | Prettier | 3.5.3 |
+| Container | Docker | 28.0+ |
+| CI/CD | GitHub Actions | - |
+| Container Registry | Docker Hub | - |
 
 ## Project Structure
 
 ```
-nodejs-ci-cd-demo/
+node-ts-cicd-demo/
 │
-├── .github/
-│   └── workflows/
-│       └── ci-cd.yml                 # GitHub Actions CI/CD pipeline
+├── .github/workflows/
+│   ├── ci-cd.yml                     # CI/CD pipeline for main branch
+│   └── ci-cd-dev.yml                 # CI/CD pipeline for dev branch
+│
+├── .husky/                           # Git pre-commit hooks
+│   └── pre-commit                    # Runs lint-staged before commits
 │
 ├── src/
-│   ├── __tests__/
+│   ├── __tests__/                    # Test files
+│   │   ├── setup.ts                  # Global test setup
 │   │   ├── app.test.ts               # Application tests
-│   │   ├── error-handling.test.ts    # Error handling tests
-│   │   ├── logger.test.ts            # Logger tests
-│   │   └── server.test.ts            # Server tests
-│   ├── app.ts                        # Main Express application
-│   ├── logger.ts                     # Logger utility
-│   └── server.ts                     # Server entry point
+│   │   ├── database.test.ts          # Database connection tests
+│   │   └── unit/                     # Unit tests by module
+│   │       ├── config/               # Configuration tests
+│   │       ├── controllers/          # Controller tests
+│   │       ├── entities/             # Entity tests
+│   │       ├── middleware/           # Middleware tests
+│   │       ├── repositories/         # Repository tests
+│   │       ├── routes/               # Route tests
+│   │       ├── services/             # Service tests
+│   │       ├── utils/                # Utility tests
+│   │       └── validators/           # Validator tests
+│   │
+│   ├── api/
+│   │   ├── controllers/              # Request handlers
+│   │   │   ├── auth.controller.ts    # Authentication endpoints
+│   │   │   └── user.controller.ts    # User management endpoints
+│   │   ├── middlewares/              # Express middleware
+│   │   │   ├── auth.middleware.ts    # JWT authentication
+│   │   │   ├── error.middleware.ts   # Global error handler
+│   │   │   ├── logger.middleware.ts  # Request logging
+│   │   │   └── validation.middleware.ts # Request validation
+│   │   └── routes/                   # API route definitions
+│   │       ├── auth.routes.ts        # Auth endpoints
+│   │       └── user.routes.ts        # User CRUD endpoints
+│   │
+│   ├── config/
+│   │   ├── database.ts               # TypeORM data source configuration
+│   │   └── validate.ts               # Environment variable validation
+│   │
+│   ├── entities/
+│   │   └── user.entity.ts            # User database entity
+│   │
+│   ├── migrations/
+│   │   └── 1774442502487-CreateUserTable.ts # Database migration
+│   │
+│   ├── repositories/
+│   │   └── user.repository.ts        # Database operations
+│   │
+│   ├── services/
+│   │   ├── auth.service.ts           # Authentication logic
+│   │   ├── jwt.service.ts            # JWT token operations
+│   │   ├── password.service.ts       # Password hashing and validation
+│   │   └── user.service.ts           # User business logic
+│   │
+│   ├── utils/
+│   │   ├── response.ts               # Standardized API responses
+│   │   ├── responseMessages.ts       # Response message constants
+│   │   └── statusCodes.ts            # HTTP status code constants
+│   │
+│   ├── validators/
+│   │   ├── auth.validator.ts         # Auth request validation schemas
+│   │   └── user.validator.ts         # User request validation schemas
+│   │
+│   ├── app.ts                        # Express application configuration
+│   └── server.ts                     # Application entry point
 │
-├── .dockerignore                     # Docker ignore rules
+├── .dockerignore                     # Docker build ignore rules
+├── .env                              # Environment variables (gitignored)
+├── .env.example                      # Example environment variables
+├── .env.test                         # Test environment variables
 ├── .eslintrc.json                    # ESLint configuration
-├── .gitignore                        # Git ignore rules
-├── .prettierignore                   # Prettier ignore rules
 ├── .prettierrc                       # Prettier configuration
-├── Dockerfile                        # Docker multi-stage build
-├── jest.config.js                    # Jest configuration
-├── package.json                      # Project dependencies
-├── package-lock.json                 # Locked dependencies
-├── tsconfig.json                     # TypeScript configuration
-└── README.md                         # This file
+├── docker-compose.yml                # Docker services (PostgreSQL + pgAdmin)
+├── Dockerfile                        # Multi-stage Docker build
+├── jest.config.js                    # Jest testing configuration
+├── package.json                      # Project dependencies and scripts
+├── tsconfig.json                     # TypeScript compiler configuration
+├── tsconfig.test.json                # TypeScript test configuration
+└── README.md                         # Project documentation
 ```
 
----
+## Features
+
+Database Integration
+- PostgreSQL database with TypeORM for type-safe database operations
+- Database migrations for schema version control
+- Connection pooling and automatic reconnection
+- Health check endpoint monitors database connectivity
+
+Authentication and Security
+- JWT-based authentication with access and refresh tokens
+- Argon2 password hashing (industry standard for password security)
+- Password strength validation with configurable requirements
+- Protected routes with authentication middleware
+- Automatic password rehashing when security parameters change
+
+API Design
+- RESTful API architecture following best practices
+- Standardized response format across all endpoints
+- Comprehensive request validation using Joi schemas
+- Centralized error handling with appropriate HTTP status codes
+- Request logging with sensitive data masking
+
+Code Quality
+- TypeScript for type safety and better developer experience
+- ESLint for code quality and consistency
+- Prettier for automatic code formatting
+- Husky pre-commit hooks run linting and formatting
+- Comprehensive test coverage with Jest
+
+DevOps and Deployment
+- Multi-stage Docker builds for optimized production images
+- GitHub Actions CI/CD pipeline with multiple stages
+- Automated testing on pull requests and pushes
+- Security scanning with npm audit
+- Automatic Docker image building and pushing
+- Docker Compose for local development with PostgreSQL and pgAdmin
+
+## Prerequisites
+
+- Node.js 18.x or 22.x
+- npm 9 or higher
+- PostgreSQL 15 (or Docker for containerized database)
+- Git
+- Docker (optional, for containerization)
 
 ## Installation
 
-### Local Development
+Clone the repository and install dependencies:
 
 ```bash
-# Install all dependencies
+git clone https://github.com/mohin-sheikh/nodejs-ci-cd-demo.git
+cd nodejs-ci-cd-demo
 npm install
-
-# Run in development mode with hot reload
-npm run dev
-
-# Run tests
-npm test
-
-# Run tests with coverage
-npm run test:coverage
-
-# Lint code
-npm run lint
-
-# Fix linting issues
-npm run lint:fix
-
-# Format code
-npm run format
-
-# Check formatting
-npm run format:check
-
-# Build for production
-npm run build
 ```
 
----
+## Environment Configuration
+
+Create a `.env` file in the root directory based on `.env.example`:
+
+```env
+# Application
+PORT=3000
+NODE_ENV=development
+
+# Database Configuration
+DB_HOST=localhost
+DB_PORT=5433
+DB_USERNAME=postgres
+DB_PASSWORD=postgres
+DB_DATABASE=node_ts_demo
+
+# CORS Configuration
+ALLOWED_ORIGINS=http://localhost:3000
+
+# JWT Configuration
+JWT_SECRET=your-super-secret-jwt-key-change-this-in-production
+JWT_EXPIRES_IN=7d
+JWT_REFRESH_SECRET=your-refresh-secret-key-change-this-in-production
+JWT_REFRESH_EXPIRES_IN=30d
+```
+
+### Environment Variables Reference
+
+| Variable | Description | Required | Default |
+|----------|-------------|----------|---------|
+| PORT | Application port | No | 3000 |
+| NODE_ENV | Environment (development/production/test) | No | development |
+| DB_HOST | PostgreSQL host | Yes | - |
+| DB_PORT | PostgreSQL port | Yes | - |
+| DB_USERNAME | PostgreSQL username | Yes | - |
+| DB_PASSWORD | PostgreSQL password | Yes | - |
+| DB_DATABASE | PostgreSQL database name | Yes | - |
+| ALLOWED_ORIGINS | CORS allowed origins (comma-separated) | No | * |
+| JWT_SECRET | JWT access token secret | No | default-secret-key |
+| JWT_EXPIRES_IN | JWT access token expiration | No | 7d |
+| JWT_REFRESH_SECRET | JWT refresh token secret | No | default-refresh-key |
+| JWT_REFRESH_EXPIRES_IN | JWT refresh token expiration | No | 30d |
+
+## Database Setup
+
+### Using Docker Compose (Recommended for Development)
+
+```bash
+# Start PostgreSQL and pgAdmin containers
+npm run docker:up
+
+# Stop containers
+npm run docker:down
+
+# View container logs
+npm run docker:logs
+```
+
+The Docker Compose setup includes:
+- PostgreSQL 15 on port 5433 (to avoid conflict with local PostgreSQL)
+- pgAdmin 4 on port 5050 (login: admin@admin.com / admin)
+
+### Using Local PostgreSQL
+
+If you have PostgreSQL installed locally, update the `.env` file with your local configuration:
+
+```env
+DB_HOST=localhost
+DB_PORT=5432
+DB_USERNAME=postgres
+DB_PASSWORD=your_password
+DB_DATABASE=node_ts_demo
+```
+
+### Run Database Migrations
+
+```bash
+# Run all pending migrations
+npm run migration:run
+
+# Generate a new migration after entity changes
+npm run migration:generate -- src/migrations/MigrationName
+
+# Create an empty migration file
+npm run migration:create -- src/migrations/MigrationName
+
+# Revert the last migration
+npm run migration:revert
+
+# Show migration status
+npm run migration:show
+
+# Reset database (revert all and re-run migrations)
+npm run db:reset
+```
+
+## Running the Application
+
+### Development Mode
+
+```bash
+# Start with hot reload using nodemon
+npm run dev
+
+# Or build and run
+npm run build
+npm start
+```
+
+### Production Mode
+
+```bash
+# Build TypeScript to JavaScript
+npm run build
+
+# Start production server
+NODE_ENV=production npm start
+```
 
 ## Available Scripts
 
 | Script | Description |
 |--------|-------------|
-| `npm start` | Start the production server |
+| `npm start` | Start production server |
 | `npm run dev` | Start development server with hot reload |
 | `npm run build` | Compile TypeScript to JavaScript |
-| `npm test` | Run tests |
+| `npm test` | Run all tests |
 | `npm run test:watch` | Run tests in watch mode |
 | `npm run test:coverage` | Run tests with coverage report |
+| `npm run test:integration` | Run integration tests only |
 | `npm run lint` | Run ESLint |
 | `npm run lint:fix` | Fix ESLint issues |
 | `npm run format` | Format code with Prettier |
 | `npm run format:check` | Check code formatting |
+| `npm run typeorm` | Run TypeORM CLI commands |
+| `npm run migration:run` | Run database migrations |
+| `npm run migration:revert` | Revert last migration |
+| `npm run migration:generate` | Generate migration from entity changes |
+| `npm run db:reset` | Reset and re-run all migrations |
+| `npm run db:seed` | Run database seeders |
+| `npm run docker:up` | Start Docker containers |
+| `npm run docker:down` | Stop Docker containers |
+| `npm run docker:logs` | View Docker container logs |
 
----
+## API Documentation
 
-## API Endpoints
+### Base URL
+
+```
+http://localhost:3000
+```
+
+### Response Format
+
+All API responses follow a standardized format:
+
+Success Response:
+```json
+{
+  "statusCode": 200,
+  "message": "Success message",
+  "data": { ... }
+}
+```
+
+Error Response:
+```json
+{
+  "statusCode": 400,
+  "message": "Error message",
+  "data": {}
+}
+```
+
+Paginated Response:
+```json
+{
+  "statusCode": 200,
+  "message": "Success",
+  "data": [ ... ],
+  "pagination": {
+    "page": 1,
+    "limit": 10,
+    "total": 100,
+    "totalPages": 10,
+    "hasNext": true,
+    "hasPrev": false
+  }
+}
+```
 
 ### Health Check
-```http
+
+```
 GET /health
 ```
-**Response:**
+
+Response:
 ```json
 {
-  "status": "OK",
-  "timestamp": "2026-03-24T12:00:00.000Z",
-  "environment": "production"
+  "statusCode": 200,
+  "message": "Health check passed",
+  "data": {
+    "status": "OK",
+    "environment": "development",
+    "database": "connected"
+  }
 }
 ```
 
-### Welcome Message
-```http
+### Welcome Endpoint
+
+```
 GET /
 ```
-**Response:**
+
+Response:
 ```json
 {
-  "message": "Welcome to Node.js TypeScript CI/CD Demo API"
+  "statusCode": 200,
+  "message": "API is running",
+  "data": {
+    "message": "Welcome to Node.js TypeScript CI/CD Demo API"
+  }
 }
 ```
 
-### Get Users
-```http
-GET /api/users?limit={number}
+### Authentication Endpoints
+
+#### Register User
+
 ```
-**Response:**
+POST /api/users
+```
+
+Request Body:
 ```json
 {
-  "users": [
-    { "id": 1, "name": "John Doe", "email": "john@example.com" },
-    { "id": 2, "name": "Jane Smith", "email": "jane@example.com" }
+  "name": "John Doe",
+  "email": "john@example.com",
+  "password": "Test@123456"
+}
+```
+
+Response (201 Created):
+```json
+{
+  "statusCode": 201,
+  "message": "User created successfully",
+  "data": {
+    "id": "123e4567-e89b-12d3-a456-426614174000",
+    "name": "John Doe",
+    "email": "john@example.com",
+    "isActive": true,
+    "createdAt": "2024-01-01T00:00:00.000Z",
+    "updatedAt": "2024-01-01T00:00:00.000Z"
+  }
+}
+```
+
+#### Login
+
+```
+POST /api/auth/login
+```
+
+Request Body:
+```json
+{
+  "email": "john@example.com",
+  "password": "Test@123456"
+}
+```
+
+Response:
+```json
+{
+  "statusCode": 200,
+  "message": "Login successful",
+  "data": {
+    "user": {
+      "id": "123e4567-e89b-12d3-a456-426614174000",
+      "name": "John Doe",
+      "email": "john@example.com",
+      "isActive": true,
+      "createdAt": "2024-01-01T00:00:00.000Z",
+      "updatedAt": "2024-01-01T00:00:00.000Z"
+    },
+    "tokens": {
+      "accessToken": "eyJhbGciOiJIUzI1NiIs...",
+      "refreshToken": "eyJhbGciOiJIUzI1NiIs...",
+      "expiresIn": "7d"
+    }
+  }
+}
+```
+
+#### Refresh Token
+
+```
+POST /api/auth/refresh
+```
+
+Request Body:
+```json
+{
+  "refreshToken": "eyJhbGciOiJIUzI1NiIs..."
+}
+```
+
+Response:
+```json
+{
+  "statusCode": 200,
+  "message": "Token refreshed successfully",
+  "data": {
+    "tokens": {
+      "accessToken": "eyJhbGciOiJIUzI1NiIs...",
+      "refreshToken": "eyJhbGciOiJIUzI1NiIs...",
+      "expiresIn": "7d"
+    }
+  }
+}
+```
+
+#### Get Current User
+
+```
+GET /api/auth/me
+```
+
+Headers:
+```
+Authorization: Bearer <access_token>
+```
+
+Response:
+```json
+{
+  "statusCode": 200,
+  "message": "Current user retrieved",
+  "data": {
+    "user": {
+      "id": "123e4567-e89b-12d3-a456-426614174000",
+      "email": "john@example.com",
+      "name": "John Doe"
+    }
+  }
+}
+```
+
+### User Management Endpoints
+
+All user endpoints require authentication. Include the access token in the Authorization header:
+
+```
+Authorization: Bearer <access_token>
+```
+
+#### Get All Users
+
+```
+GET /api/users
+```
+
+Response:
+```json
+{
+  "statusCode": 200,
+  "message": "Users retrieved successfully",
+  "data": [
+    {
+      "id": "123e4567-e89b-12d3-a456-426614174000",
+      "name": "John Doe",
+      "email": "john@example.com",
+      "isActive": true,
+      "createdAt": "2024-01-01T00:00:00.000Z",
+      "updatedAt": "2024-01-01T00:00:00.000Z"
+    }
   ]
 }
 ```
 
----
+#### Get User by ID
+
+```
+GET /api/users/:id
+```
+
+Response:
+```json
+{
+  "statusCode": 200,
+  "message": "User retrieved successfully",
+  "data": {
+    "id": "123e4567-e89b-12d3-a456-426614174000",
+    "name": "John Doe",
+    "email": "john@example.com",
+    "isActive": true,
+    "createdAt": "2024-01-01T00:00:00.000Z",
+    "updatedAt": "2024-01-01T00:00:00.000Z"
+  }
+}
+```
+
+#### Update User
+
+```
+PUT /api/users/:id
+```
+
+Request Body:
+```json
+{
+  "name": "Jane Doe",
+  "isActive": false
+}
+```
+
+Response:
+```json
+{
+  "statusCode": 200,
+  "message": "User updated successfully",
+  "data": {
+    "id": "123e4567-e89b-12d3-a456-426614174000",
+    "name": "Jane Doe",
+    "email": "john@example.com",
+    "isActive": false,
+    "createdAt": "2024-01-01T00:00:00.000Z",
+    "updatedAt": "2024-01-01T00:00:00.001Z"
+  }
+}
+```
+
+#### Delete User
+
+```
+DELETE /api/users/:id
+```
+
+Response (204 No Content):
+```json
+{
+  "statusCode": 204,
+  "message": "User deleted successfully",
+  "data": {}
+}
+```
+
+## Password Requirements
+
+Passwords must meet the following criteria:
+- Minimum 8 characters
+- Maximum 128 characters
+- At least one uppercase letter (A-Z)
+- At least one lowercase letter (a-z)
+- At least one number (0-9)
+- At least one special character (@$!%*?&)
 
 ## Testing
 
-This project uses Jest for testing with comprehensive coverage thresholds.
+### Test Structure
+
+The project uses Jest for testing with the following structure:
+- Unit tests for individual components
+- Integration tests for API endpoints
+- Test coverage reporting with thresholds
 
 ### Running Tests
 
@@ -243,291 +640,334 @@ This project uses Jest for testing with comprehensive coverage thresholds.
 # Run all tests
 npm test
 
+# Run tests in watch mode
+npm run test:watch
+
 # Run tests with coverage report
 npm run test:coverage
 
-# Run tests in watch mode
-npm run test:watch
+# Run integration tests only
+npm run test:integration
+
+# Run tests with coverage in watch mode
+npm run test:watch:coverage
 ```
 
-### Coverage Thresholds
+### Test Coverage Thresholds
 
 | Metric | Threshold |
 |--------|-----------|
-| Functions | 70% |
-| Lines | 70% |
-| Statements | 70% |
+| Functions | 0% (configurable) |
+| Lines | 80% |
+| Statements | 0% (configurable) |
 
-### Test Structure
+### Test Files Location
 
-- **Unit Tests** - Individual component testing
-- **Integration Tests** - API endpoint testing
-- **Error Handling** - Error scenarios and middleware
-
----
+Tests are organized in the `src/__tests__/` directory mirroring the source structure:
+- `unit/config/` - Configuration validation tests
+- `unit/controllers/` - Controller tests
+- `unit/entities/` - Entity tests
+- `unit/middleware/` - Middleware tests
+- `unit/repositories/` - Repository tests
+- `unit/routes/` - Route tests
+- `unit/services/` - Service tests
+- `unit/utils/` - Utility tests
+- `unit/validators/` - Validator tests
 
 ## Code Quality
 
 ### ESLint Configuration
 
-The project uses ESLint with TypeScript rules to maintain code quality
-
-- TypeScript-specific linting
-- Unused variable detection
-- Consistent error handling
-- No console statements (warnings)
+The project uses ESLint with TypeScript rules:
+- TypeScript-specific linting with @typescript-eslint
+- Unused variable detection (variables prefixed with _ are ignored)
+- No explicit any warnings
+- Consistent error handling patterns
 
 ### Prettier Configuration
 
-Prettier ensures consistent code formatting
-
+Code formatting is enforced with Prettier:
 - 2 spaces indentation
 - Single quotes
 - Semicolons
 - 100 character line width
-- ES5 trailing commas
+- Trailing commas in ES5
 
 ### Git Hooks
 
-Pre-commit hooks using Husky and lint-staged
-
-- Automatically fix ESLint issues
-- Format code with Prettier
-- Run tests before commit
-
----
-
-## CI/CD Pipeline
-
-The GitHub Actions pipeline runs on every push and pull request to `main` and `develop` branches.
-
-### Pipeline Stages
-
-```yaml
-1. Build and Test
-   ├── Checkout code
-   ├── Setup Node.js
-   ├── Install dependencies
-   ├── Check formatting
-   ├── Lint code
-   ├── Build project
-   └── Run tests with coverage
-
-2. Security Scan
-   ├── Run npm audit
-   └── Security vulnerability check
-
-3. Docker Build (main branch only)
-   ├── Set up Docker Buildx
-   ├── Login to Docker Hub
-   ├── Build Docker image
-   └── Push to Docker Hub
-
-4. Deploy (main branch only)
-   └── Ready for deployment
-```
-
-### Branch Strategy
-
-- **main** - Production branch - triggers full pipeline with Docker deployment
-- **develop** - Development branch - triggers build and test only
-- **pull requests** - Triggers build and test for validation
-
----
+Husky manages pre-commit hooks that run lint-staged:
+- Automatically fixes ESLint issues
+- Formats code with Prettier
+- Runs on all TypeScript files in the src directory
 
 ## Docker
 
 ### Docker Configuration
 
-Multi-stage build for optimized production images
+The Dockerfile uses a multi-stage build strategy for optimized production images:
 
-```dockerfile
-Stage 1 - Builder
-├── Install dependencies
-├── Compile TypeScript
-└── Prepare build artifacts
+Stage 1 - Builder:
+- Installs all dependencies including devDependencies
+- Compiles TypeScript to JavaScript
+- Prepares build artifacts
 
-Stage 2 - Production
-├── Install production dependencies
-├── Copy compiled code
-├── Create non-root user
-└── Configure health checks
-```
+Stage 2 - Production:
+- Copies only production dependencies
+- Copies compiled code from builder stage
+- Creates a non-root user for security
+- Configures health check endpoint
 
 ### Docker Commands
 
 ```bash
-# Build the image
+# Build the Docker image
 docker build -t node-ts-cicd-demo .
 
 # Run the container
 docker run -p 3000:3000 node-ts-cicd-demo
 
-# Run in detached mode
-docker run -d -p 3000:3000 --name my-app node-ts-cicd-demo
+# Run with environment variables
+docker run -d -p 3000:3000 \
+  -e NODE_ENV=production \
+  -e DB_HOST=postgres \
+  -e DB_USERNAME=postgres \
+  -e DB_PASSWORD=postgres \
+  -e DB_DATABASE=node_ts_demo \
+  --name node-app \
+  node-ts-cicd-demo
 
 # View logs
-docker logs my-app
+docker logs node-app
 
 # Stop container
-docker stop my-app
+docker stop node-app
 
 # Remove container
-docker rm my-app
+docker rm node-app
 
-# Pull from Docker Hub
+# Pull from Docker Hub (when published)
 docker pull mohinsheikh/node-ts-cicd-demo:latest
 ```
 
-### Docker Image Tags
+### Docker Compose
 
-- `latest` - Most recent production build
-- `{commit-sha}` - Specific commit version
+The docker-compose.yml file provides a complete development environment:
+- PostgreSQL 15 database on port 5433
+- pgAdmin 4 on port 5050 for database management
+- Persistent volumes for data storage
+- Health checks for database readiness
 
----
+## CI/CD Pipeline
 
-## 🔧 Environment Variables
+The project uses GitHub Actions for continuous integration and deployment with two separate workflow files.
 
-| Variable | Description | Default |
-|----------|-------------|---------|
-| `PORT` | Server port | 3000 |
-| `NODE_ENV` | Environment (development/production/test) | development |
+### Main Branch Pipeline (ci-cd.yml)
 
----
+Triggers on pushes to `main` and `develop` branches, and pull requests to `main`.
+
+Pipeline Stages:
+
+1. Build and Test
+   - Checks out code
+   - Sets up Node.js 22
+   - Installs dependencies with npm ci
+   - Checks code formatting with Prettier
+   - Runs ESLint
+   - Builds TypeScript project
+   - Runs tests with coverage
+   - Uploads coverage reports to Codecov
+
+2. Security Scan
+   - Runs npm audit for vulnerability detection
+   - Continues on error (non-blocking)
+
+3. Docker Build and Push (main branch only)
+   - Sets up Docker Buildx for multi-platform builds
+   - Logs into Docker Hub
+   - Builds Docker image
+   - Pushes with tags: `latest` and commit SHA
+
+4. Deploy (main branch only)
+   - Placeholder for deployment configuration
+
+### Development Branch Pipeline (ci-cd-dev.yml)
+
+Triggers on pushes and pull requests to `dev` branch with PostgreSQL integration testing.
+
+Pipeline Stages:
+
+1. Build and Test with PostgreSQL
+   - Spins up PostgreSQL 15 container as a service
+   - Creates .env file with database configuration
+   - Runs database migrations
+   - Executes tests with database integration
+
+2. Security Scan
+   - Runs npm audit for vulnerability detection
+
+3. Docker Build and Push (dev branch only)
+   - Builds and pushes Docker image with tags: `dev` and `dev-{commit-sha}`
+
+### Branch Strategy
+
+| Branch | Trigger | Pipeline Actions |
+|--------|---------|------------------|
+| main | Push | Build, Test, Security Scan, Docker Build, Deploy |
+| main | Pull Request | Build, Test, Security Scan |
+| develop | Push | Build, Test |
+| dev | Push | Build, Test with PostgreSQL, Security Scan, Docker Build |
+| dev | Pull Request | Build, Test with PostgreSQL |
+
+### Required GitHub Secrets
+
+| Secret Name | Description |
+|-------------|-------------|
+| `CODECOV_TOKEN` | Token for uploading coverage reports |
+| `DOCKER_USERNAME` | Docker Hub username |
+| `DOCKER_PASSWORD` | Docker Hub access token (not password) |
+
+## Error Handling
+
+The application implements centralized error handling with appropriate HTTP status codes:
+
+| Status Code | Description | When Used |
+|-------------|-------------|-----------|
+| 200 | OK | Successful GET, PUT operations |
+| 201 | Created | Successful POST operations |
+| 204 | No Content | Successful DELETE operations |
+| 400 | Bad Request | Validation errors, malformed requests |
+| 401 | Unauthorized | Missing or invalid authentication token |
+| 403 | Forbidden | Authenticated but not authorized |
+| 404 | Not Found | Resource does not exist |
+| 409 | Conflict | Duplicate email or constraint violation |
+| 500 | Internal Server Error | Unexpected server errors |
+
+## Security Features
+
+Password Security
+- Argon2id hashing with configurable memory cost, time cost, and parallelism
+- Automatic password rehashing when algorithm parameters change
+- Password validation before hashing
+- Passwords never returned in API responses
+
+JWT Security
+- Separate secrets for access and refresh tokens
+- Configurable expiration times
+- Token validation with proper error handling
+- Refresh token rotation support
+
+Input Validation
+- Joi validation for all request bodies, parameters, and query strings
+- Automatic stripping of unknown fields
+- Detailed validation error messages
+
+Database Security
+- Parameterized queries prevent SQL injection
+- Sensitive fields (password) excluded from default queries
+- Database credentials from environment variables only
+
+## Docker Image Tags
+
+| Tag | Description |
+|-----|-------------|
+| `latest` | Most recent production build from main branch |
+| `{commit-sha}` | Versioned build from main branch |
+| `dev` | Most recent development build from dev branch |
+| `dev-{commit-sha}` | Versioned development build from dev branch |
 
 ## Deployment
 
 ### Deploy with Docker
 
 ```bash
-# Pull the latest image
+# Pull the latest production image
 docker pull mohinsheikh/node-ts-cicd-demo:latest
 
-# Run the container
+# Run the container with environment variables
 docker run -d -p 3000:3000 \
   -e NODE_ENV=production \
-  --name node-app \
+  -e DB_HOST=your-db-host \
+  -e DB_PORT=5432 \
+  -e DB_USERNAME=your-db-user \
+  -e DB_PASSWORD=your-db-password \
+  -e DB_DATABASE=your-db-name \
+  -e JWT_SECRET=your-jwt-secret \
+  -e JWT_REFRESH_SECRET=your-refresh-secret \
+  --name node-api \
   mohinsheikh/node-ts-cicd-demo:latest
 ```
 
-### Deploy to Cloud Platforms
+### Deployment Platforms
 
-The Docker image can be deployed to any cloud platform:
-
-- **AWS ECS/EKS**
-- **Google Cloud Run**
-- **Azure Container Instances**
-- **DigitalOcean App Platform**
-- **Heroku Container Registry**
-
----
+The Docker image can be deployed to:
+- AWS ECS (Elastic Container Service)
+- AWS EKS (Elastic Kubernetes Service)
+- Google Cloud Run
+- Azure Container Instances
+- Azure Kubernetes Service (AKS)
+- DigitalOcean App Platform
+- Heroku Container Registry
+- Any platform supporting Docker containers
 
 ## Troubleshooting
 
-### Common Issues and Solutions
+### Database Connection Issues
 
-#### ESLint Configuration Error
+Problem: Cannot connect to PostgreSQL
+Solution:
+- Verify database container is running: `docker ps`
+- Check database credentials in .env file
+- Ensure database port is not blocked
+- Run `npm run docker:up` to start containers
 
-**Problem** - "ESLint couldn't find a configuration file"
-**Solution** - Ensure `.eslintrc.json` exists in the root directory and is properly formatted.
+### Migration Errors
 
-#### TypeScript Version Warning
+Problem: Migration fails with duplicate key error
+Solution:
+- Reset database: `npm run db:reset`
+- Or revert migration: `npm run migration:revert` followed by `npm run migration:run`
 
-**Problem** - TypeScript version not officially supported
-**Solution** Downgrade to TypeScript 5.5.4
-```bash
-npm install --save-dev typescript@5.5.4
-```
+### TypeScript Compilation Errors
 
-#### Jest Export Error
+Problem: TypeScript version mismatch
+Solution:
+- Ensure TypeScript version 5.5.4: `npm install --save-dev typescript@5.5.4`
 
-**Problem**: "export default" syntax error in jest.config.js
-**Solution**: Use CommonJS format in jest.config.js
-```javascript
-module.exports = { ... }
-```
+### Jest Test Failures
 
-#### Docker Build Fails
+Problem: Tests fail with database connection issues
+Solution:
+- Ensure test environment is configured in .env.test
+- Run tests with `NODE_ENV=test npm test`
 
-**Problem**: "husky not found" during Docker build
-**Solution**: Add `--ignore-scripts` flag
-```dockerfile
-RUN npm ci --omit=dev --ignore-scripts
-```
+### Docker Build Fails
 
-#### Docker Hub Authentication Failed
+Problem: Husky not found during Docker build
+Solution:
+- The Dockerfile uses `--ignore-scripts` to skip husky installation
 
-**Problem**: Unable to push Docker image
-**Solution**: Use personal access token instead of password with read/write permissions.
+### JWT Authentication Issues
 
----
+Problem: Token validation fails
+Solution:
+- Verify JWT_SECRET and JWT_REFRESH_SECRET are set
+- Ensure tokens are passed with Bearer prefix
+- Check token expiration time
 
-## Contributing
+### CORS Errors
 
-Contributions are welcome! Please follow these steps:
-
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
-
-### Development Guidelines
-
-- Follow the existing code style (ESLint + Prettier)
-- Write tests for new features
-- Ensure all tests pass before submitting PR
-- Update documentation as needed
-- Keep commits small and focused
-
----
+Problem: API requests blocked by CORS
+Solution:
+- Configure ALLOWED_ORIGINS with your frontend URL
+- For development, CORS is configured to accept all origins
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
----
+This project is licensed under the MIT License.
 
 ## Author
 
-**Mohin Sheikh**
-
-- GitHub - [@mohin-sheikh](https://github.com/mohin-sheikh)
-- Project Repository - [nodejs-ci-cd-demo](https://github.com/mohin-sheikh/nodejs-ci-cd-demo)
-- Docker Hub - [mohinsheikh](https://hub.docker.com/u/mohinsheikh)
-
----
-
-## Acknowledgments
-
-- [Express.js](https://expressjs.com/) - Web framework
-- [TypeScript](https://www.typescriptlang.org/) - Type safety
-- [Jest](https://jestjs.io/) - Testing framework
-- [ESLint](https://eslint.org/) - Code linting
-- [Prettier](https://prettier.io/) - Code formatting
-- [GitHub Actions](https://github.com/features/actions) - CI/CD automation
-- [Docker](https://www.docker.com/) - Containerization
-
----
-
-## Roadmap
-
-- [ ] Add database integration (PostgreSQL)
-- [ ] Implement authentication (JWT)
-- [ ] Add API documentation (Swagger)
-- [ ] End-to-end testing with Cypress
-- [ ] Performance monitoring with Prometheus
-- [ ] Kubernetes deployment manifests
-- [ ] Automated dependency updates (Dependabot)
-
----
-
-<div align="center">
-
-**Built with ❤️ using Node.js, TypeScript, and GitHub Actions**
-
-⭐ Star this repository if you found it helpful!
-
-[Report Bug](https://github.com/mohin-sheikh/nodejs-ci-cd-demo/issues) · [Request Feature](https://github.com/mohin-sheikh/nodejs-ci-cd-demo/issues)
-
-</div>
+Mohin Sheikh
+- GitHub: [@mohin-sheikh](https://github.com/mohin-sheikh)
+- Project Repository: [nodejs-ci-cd-demo](https://github.com/mohin-sheikh/nodejs-ci-cd-demo)
+- Docker Hub: [mohinsheikh](https://hub.docker.com/u/mohinsheikh)
