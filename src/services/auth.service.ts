@@ -1,5 +1,18 @@
 import { UserRepository } from '../repositories/user.repository';
 import { PasswordService } from './password.service';
+import { JWTService, TokenResponse } from './jwt.service';
+
+export interface LoginResponse {
+  user: {
+    id: string;
+    name: string;
+    email: string;
+    isActive: boolean;
+    createdAt: Date;
+    updatedAt: Date;
+  };
+  tokens: TokenResponse;
+}
 
 export class AuthService {
   private userRepository: UserRepository;
@@ -8,19 +21,7 @@ export class AuthService {
     this.userRepository = new UserRepository();
   }
 
-  async login(
-    email: string,
-    password: string
-  ): Promise<{
-    user: {
-      id: string;
-      name: string;
-      email: string;
-      isActive: boolean;
-      createdAt: Date;
-      updatedAt: Date;
-    };
-  } | null> {
+  async login(email: string, password: string): Promise<LoginResponse | null> {
     const user = await this.userRepository.findByEmailWithPassword(email);
 
     if (!user) {
@@ -41,6 +42,13 @@ export class AuthService {
       await this.userRepository.update(user.id, { password: newHash });
     }
 
+    // Generate JWT tokens
+    const tokens = JWTService.generateTokens({
+      id: user.id,
+      email: user.email,
+      name: user.name,
+    });
+
     return {
       user: {
         id: user.id,
@@ -50,6 +58,28 @@ export class AuthService {
         createdAt: user.createdAt,
         updatedAt: user.updatedAt,
       },
+      tokens,
     };
+  }
+
+  async refreshToken(refreshToken: string): Promise<TokenResponse | null> {
+    try {
+      const decoded = JWTService.verifyRefreshToken(refreshToken);
+      const user = await this.userRepository.findById(decoded.id);
+
+      if (!user || !user.isActive) {
+        return null;
+      }
+
+      const newTokens = JWTService.generateTokens({
+        id: user.id,
+        email: user.email,
+        name: user.name,
+      });
+
+      return newTokens;
+    } catch {
+      return null;
+    }
   }
 }

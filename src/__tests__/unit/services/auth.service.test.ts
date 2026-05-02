@@ -1,14 +1,17 @@
 import { AuthService } from '../../../services/auth.service';
 import { UserRepository } from '../../../repositories/user.repository';
 import { PasswordService } from '../../../services/password.service';
+import { JWTService } from '../../../services/jwt.service';
 
 jest.mock('../../../repositories/user.repository');
 jest.mock('../../../services/password.service');
+jest.mock('../../../services/jwt.service');
 
 describe('AuthService', () => {
   let authService: AuthService;
   let mockUserRepository: jest.Mocked<UserRepository>;
   let mockPasswordService: jest.Mocked<typeof PasswordService>;
+  let mockJWTService: jest.Mocked<typeof JWTService>;
 
   const mockDate = new Date();
   const mockUser = {
@@ -21,6 +24,12 @@ describe('AuthService', () => {
     updatedAt: mockDate,
   };
 
+  const mockTokens = {
+    accessToken: 'mock-access-token',
+    refreshToken: 'mock-refresh-token',
+    expiresIn: '7d',
+  };
+
   const expectedUserResponse = {
     user: {
       id: mockUser.id,
@@ -30,6 +39,7 @@ describe('AuthService', () => {
       createdAt: mockDate,
       updatedAt: mockDate,
     },
+    tokens: mockTokens,
   };
 
   beforeEach(() => {
@@ -38,6 +48,7 @@ describe('AuthService', () => {
     mockUserRepository = {
       findByEmailWithPassword: jest.fn(),
       update: jest.fn(),
+      findById: jest.fn(),
     } as unknown as jest.Mocked<UserRepository>;
 
     mockPasswordService = {
@@ -46,10 +57,26 @@ describe('AuthService', () => {
       needsRehash: jest.fn(),
     } as unknown as jest.Mocked<typeof PasswordService>;
 
+    mockJWTService = {
+      generateTokens: jest.fn(),
+      verifyAccessToken: jest.fn(),
+      verifyRefreshToken: jest.fn(),
+      decodeToken: jest.fn(),
+    } as unknown as jest.Mocked<typeof JWTService>;
+
     (UserRepository as jest.Mock).mockImplementation(() => mockUserRepository);
-    (PasswordService.verify as jest.Mock) = mockPasswordService.verify;
-    (PasswordService.hash as jest.Mock) = mockPasswordService.hash;
-    (PasswordService.needsRehash as jest.Mock) = mockPasswordService.needsRehash;
+
+    // Properly assign mock implementations without using 'any'
+    Object.assign(PasswordService, {
+      verify: mockPasswordService.verify,
+      hash: mockPasswordService.hash,
+      needsRehash: mockPasswordService.needsRehash,
+    });
+
+    Object.assign(JWTService, {
+      generateTokens: mockJWTService.generateTokens,
+      verifyRefreshToken: mockJWTService.verifyRefreshToken,
+    });
 
     authService = new AuthService();
   });
@@ -58,16 +85,22 @@ describe('AuthService', () => {
     const email = 'john@example.com';
     const password = 'Test@123456';
 
-    it('should return user when credentials are valid', async () => {
+    it('should return user with tokens when credentials are valid', async () => {
       mockUserRepository.findByEmailWithPassword.mockResolvedValue(mockUser);
       mockPasswordService.verify.mockResolvedValue(true);
       mockPasswordService.needsRehash.mockResolvedValue(false);
+      mockJWTService.generateTokens.mockReturnValue(mockTokens);
 
       const result = await authService.login(email, password);
 
       expect(result).toEqual(expectedUserResponse);
       expect(mockUserRepository.findByEmailWithPassword).toHaveBeenCalledWith(email);
       expect(mockPasswordService.verify).toHaveBeenCalledWith(mockUser.password, password);
+      expect(mockJWTService.generateTokens).toHaveBeenCalledWith({
+        id: mockUser.id,
+        email: mockUser.email,
+        name: mockUser.name,
+      });
       expect(mockUserRepository.update).not.toHaveBeenCalled();
     });
 
@@ -79,6 +112,7 @@ describe('AuthService', () => {
       expect(result).toBeNull();
       expect(mockUserRepository.findByEmailWithPassword).toHaveBeenCalledWith(email);
       expect(mockPasswordService.verify).not.toHaveBeenCalled();
+      expect(mockJWTService.generateTokens).not.toHaveBeenCalled();
     });
 
     it('should return null when user is inactive', async () => {
@@ -90,6 +124,7 @@ describe('AuthService', () => {
       expect(result).toBeNull();
       expect(mockUserRepository.findByEmailWithPassword).toHaveBeenCalledWith(email);
       expect(mockPasswordService.verify).not.toHaveBeenCalled();
+      expect(mockJWTService.generateTokens).not.toHaveBeenCalled();
     });
 
     it('should return null when password is invalid', async () => {
@@ -101,15 +136,17 @@ describe('AuthService', () => {
       expect(result).toBeNull();
       expect(mockUserRepository.findByEmailWithPassword).toHaveBeenCalledWith(email);
       expect(mockPasswordService.verify).toHaveBeenCalledWith(mockUser.password, password);
+      expect(mockJWTService.generateTokens).not.toHaveBeenCalled();
     });
 
-    it('should rehash password when needsRehash returns true', async () => {
+    it('should rehash password and generate tokens when needsRehash returns true', async () => {
       const newHash = 'new_hashed_password';
       mockUserRepository.findByEmailWithPassword.mockResolvedValue(mockUser);
       mockPasswordService.verify.mockResolvedValue(true);
       mockPasswordService.needsRehash.mockResolvedValue(true);
       mockPasswordService.hash.mockResolvedValue(newHash);
       mockUserRepository.update.mockResolvedValue({ ...mockUser, password: newHash });
+      mockJWTService.generateTokens.mockReturnValue(mockTokens);
 
       const result = await authService.login(email, password);
 
@@ -117,6 +154,11 @@ describe('AuthService', () => {
       expect(mockPasswordService.needsRehash).toHaveBeenCalledWith(mockUser.password);
       expect(mockPasswordService.hash).toHaveBeenCalledWith(password);
       expect(mockUserRepository.update).toHaveBeenCalledWith(mockUser.id, { password: newHash });
+      expect(mockJWTService.generateTokens).toHaveBeenCalledWith({
+        id: mockUser.id,
+        email: mockUser.email,
+        name: mockUser.name,
+      });
     });
 
     it('should handle database errors gracefully', async () => {
@@ -126,6 +168,71 @@ describe('AuthService', () => {
       await expect(authService.login(email, password)).rejects.toThrow(
         'Database connection failed'
       );
+    });
+  });
+
+  describe('refreshToken', () => {
+    const refreshToken = 'valid-refresh-token';
+    const mockDecodedUser = {
+      id: mockUser.id,
+      email: mockUser.email,
+      name: mockUser.name,
+    };
+    const mockNewTokens = {
+      accessToken: 'new-access-token',
+      refreshToken: 'new-refresh-token',
+      expiresIn: '7d',
+    };
+
+    it('should return new tokens when refresh token is valid', async () => {
+      mockJWTService.verifyRefreshToken.mockReturnValue(mockDecodedUser);
+      mockUserRepository.findById.mockResolvedValue(mockUser);
+      mockJWTService.generateTokens.mockReturnValue(mockNewTokens);
+
+      const result = await authService.refreshToken(refreshToken);
+
+      expect(result).toEqual(mockNewTokens);
+      expect(mockJWTService.verifyRefreshToken).toHaveBeenCalledWith(refreshToken);
+      expect(mockUserRepository.findById).toHaveBeenCalledWith(mockUser.id);
+      expect(mockJWTService.generateTokens).toHaveBeenCalledWith(mockDecodedUser);
+    });
+
+    it('should return null when refresh token is invalid', async () => {
+      mockJWTService.verifyRefreshToken.mockImplementation(() => {
+        throw new Error('Invalid refresh token');
+      });
+
+      const result = await authService.refreshToken(refreshToken);
+
+      expect(result).toBeNull();
+      expect(mockJWTService.verifyRefreshToken).toHaveBeenCalledWith(refreshToken);
+      expect(mockUserRepository.findById).not.toHaveBeenCalled();
+      expect(mockJWTService.generateTokens).not.toHaveBeenCalled();
+    });
+
+    it('should return null when user not found', async () => {
+      mockJWTService.verifyRefreshToken.mockReturnValue(mockDecodedUser);
+      mockUserRepository.findById.mockResolvedValue(null);
+
+      const result = await authService.refreshToken(refreshToken);
+
+      expect(result).toBeNull();
+      expect(mockJWTService.verifyRefreshToken).toHaveBeenCalledWith(refreshToken);
+      expect(mockUserRepository.findById).toHaveBeenCalledWith(mockUser.id);
+      expect(mockJWTService.generateTokens).not.toHaveBeenCalled();
+    });
+
+    it('should return null when user is inactive', async () => {
+      const inactiveUser = { ...mockUser, isActive: false };
+      mockJWTService.verifyRefreshToken.mockReturnValue(mockDecodedUser);
+      mockUserRepository.findById.mockResolvedValue(inactiveUser);
+
+      const result = await authService.refreshToken(refreshToken);
+
+      expect(result).toBeNull();
+      expect(mockJWTService.verifyRefreshToken).toHaveBeenCalledWith(refreshToken);
+      expect(mockUserRepository.findById).toHaveBeenCalledWith(mockUser.id);
+      expect(mockJWTService.generateTokens).not.toHaveBeenCalled();
     });
   });
 });

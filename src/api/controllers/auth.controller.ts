@@ -24,4 +24,36 @@ export class AuthController {
       next(error);
     }
   }
+
+  async refreshToken(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { refreshToken } = req.body;
+
+      if (!refreshToken) {
+        return ResponseHandler.badRequest(res, 'Refresh token is required');
+      }
+
+      const newTokens = await this.authService.refreshToken(refreshToken);
+
+      if (!newTokens) {
+        return ResponseHandler.unauthorized(res, 'Invalid or expired refresh token');
+      }
+
+      return ResponseHandler.success(res, { tokens: newTokens }, 'Token refreshed successfully');
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async getCurrentUser(req: Request, res: Response, next: NextFunction) {
+    try {
+      if (!req.user) {
+        return ResponseHandler.unauthorized(res, 'User not authenticated');
+      }
+
+      return ResponseHandler.success(res, { user: req.user }, 'Current user retrieved');
+    } catch (error) {
+      next(error);
+    }
+  }
 }

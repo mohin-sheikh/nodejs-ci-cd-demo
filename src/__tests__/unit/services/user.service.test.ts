@@ -9,7 +9,6 @@ jest.mock('../../../repositories/user.repository');
 describe('UserService', () => {
   let userService: UserService;
   let mockUserRepository: jest.Mocked<UserRepository>;
-  let mockPasswordService: jest.Mocked<typeof PasswordService>;
 
   const mockUser: User = {
     id: '123e4567-e89b-12d3-a456-426614174000',
@@ -34,22 +33,7 @@ describe('UserService', () => {
       delete: jest.fn(),
     } as unknown as jest.Mocked<UserRepository>;
 
-    mockPasswordService = {
-      hash: jest.fn(),
-      verify: jest.fn(),
-      validatePasswordStrength: jest.fn(),
-      needsRehash: jest.fn(),
-    } as unknown as jest.Mocked<typeof PasswordService>;
-
     (UserRepository as jest.Mock).mockImplementation(() => mockUserRepository);
-    (PasswordService as unknown as jest.Mock) = jest
-      .fn()
-      .mockImplementation(() => mockPasswordService);
-
-    PasswordService.validatePasswordStrength = mockPasswordService.validatePasswordStrength;
-    PasswordService.hash = mockPasswordService.hash;
-    PasswordService.verify = mockPasswordService.verify;
-    PasswordService.needsRehash = mockPasswordService.needsRehash;
 
     userService = new UserService();
   });
@@ -217,6 +201,28 @@ describe('UserService', () => {
       });
     });
 
+    it('should throw error when updating user with invalid password', async () => {
+      const updateWithInvalidPassword = {
+        name: 'Updated Name',
+        password: 'weak',
+      };
+
+      (PasswordService.validatePasswordStrength as jest.Mock).mockReturnValue({
+        isValid: false,
+        message: 'Password must be at least 8 characters long',
+      });
+
+      mockUserRepository.findById.mockResolvedValue(mockUser);
+
+      await expect(userService.updateUser(mockUser.id, updateWithInvalidPassword)).rejects.toThrow(
+        'Password must be at least 8 characters long'
+      );
+
+      expect(PasswordService.validatePasswordStrength).toHaveBeenCalledWith('weak');
+      expect(PasswordService.hash).not.toHaveBeenCalled();
+      expect(mockUserRepository.update).not.toHaveBeenCalled();
+    });
+
     it('should throw error when user not found', async () => {
       mockUserRepository.findById.mockResolvedValue(null);
 
@@ -266,8 +272,9 @@ describe('UserService', () => {
   });
 
   describe('validateUserCredentials', () => {
+    const userWithPassword = { ...mockUser, password: 'hashed_password' };
+
     it('should return user when credentials are valid', async () => {
-      const userWithPassword = { ...mockUser, password: 'hashed_password' };
       mockUserRepository.findByEmailWithPassword?.mockResolvedValue(userWithPassword);
       (PasswordService.verify as jest.Mock).mockResolvedValue(true);
       (PasswordService.needsRehash as jest.Mock).mockResolvedValue(false);
@@ -292,7 +299,6 @@ describe('UserService', () => {
     });
 
     it('should return null when password is invalid', async () => {
-      const userWithPassword = { ...mockUser, password: 'hashed_password' };
       mockUserRepository.findByEmailWithPassword?.mockResolvedValue(userWithPassword);
       (PasswordService.verify as jest.Mock).mockResolvedValue(false);
 
@@ -302,12 +308,12 @@ describe('UserService', () => {
     });
 
     it('should rehash password when needed', async () => {
-      const userWithPassword = { ...mockUser, password: 'old_hash' };
-      mockUserRepository.findByEmailWithPassword?.mockResolvedValue(userWithPassword);
+      const userWithOldHash = { ...mockUser, password: 'old_hash' };
+      mockUserRepository.findByEmailWithPassword?.mockResolvedValue(userWithOldHash);
       (PasswordService.verify as jest.Mock).mockResolvedValue(true);
       (PasswordService.needsRehash as jest.Mock).mockResolvedValue(true);
       (PasswordService.hash as jest.Mock).mockResolvedValue('new_hash');
-      mockUserRepository.update.mockResolvedValue({ ...userWithPassword, password: 'new_hash' });
+      mockUserRepository.update.mockResolvedValue({ ...userWithOldHash, password: 'new_hash' });
 
       const result = await userService.validateUserCredentials(mockUser.email, 'Test@123456');
 
@@ -338,6 +344,23 @@ describe('UserService', () => {
 
       expect(PasswordService.validatePasswordStrength).toHaveBeenCalledWith('');
       expect(mockUserRepository.create).not.toHaveBeenCalled();
+    });
+
+    it('should handle null password in createUser', async () => {
+      const invalidUserData: Partial<User> = {
+        name: 'Test',
+        email: 'test@example.com',
+        password: undefined,
+      };
+
+      (PasswordService.validatePasswordStrength as jest.Mock).mockReturnValue({
+        isValid: false,
+        message: 'Password is required',
+      });
+
+      await expect(userService.createUser(invalidUserData as Partial<User>)).rejects.toThrow(
+        'Password is required'
+      );
     });
   });
 });

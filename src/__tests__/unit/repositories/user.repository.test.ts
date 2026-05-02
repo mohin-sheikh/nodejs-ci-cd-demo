@@ -1,7 +1,7 @@
 import { UserRepository } from '../../../repositories/user.repository';
 import { AppDataSource } from '../../../config/database';
 import { User } from '../../../entities/user.entity';
-import { Repository, UpdateResult, DeleteResult } from 'typeorm';
+import { Repository, UpdateResult, DeleteResult, SelectQueryBuilder } from 'typeorm';
 
 jest.mock('../../../config/database', () => ({
   AppDataSource: {
@@ -9,9 +9,17 @@ jest.mock('../../../config/database', () => ({
   },
 }));
 
+// Define the QueryBuilder mock type
+interface MockQueryBuilder {
+  addSelect: jest.Mock;
+  where: jest.Mock;
+  getOne: jest.Mock;
+}
+
 describe('UserRepository', () => {
   let userRepository: UserRepository;
   let mockTypeOrmRepository: jest.Mocked<Repository<User>>;
+  let mockQueryBuilder: MockQueryBuilder;
 
   const mockUser: User = {
     id: '123e4567-e89b-12d3-a456-426614174000',
@@ -26,6 +34,13 @@ describe('UserRepository', () => {
   beforeEach(() => {
     jest.clearAllMocks();
 
+    // Mock QueryBuilder
+    mockQueryBuilder = {
+      addSelect: jest.fn().mockReturnThis(),
+      where: jest.fn().mockReturnThis(),
+      getOne: jest.fn(),
+    };
+
     mockTypeOrmRepository = {
       find: jest.fn(),
       findOne: jest.fn(),
@@ -33,6 +48,9 @@ describe('UserRepository', () => {
       save: jest.fn(),
       update: jest.fn(),
       delete: jest.fn(),
+      createQueryBuilder: jest
+        .fn()
+        .mockReturnValue(mockQueryBuilder as unknown as SelectQueryBuilder<User>),
     } as unknown as jest.Mocked<Repository<User>>;
 
     (AppDataSource.getRepository as jest.Mock).mockReturnValue(mockTypeOrmRepository);
@@ -269,6 +287,56 @@ describe('UserRepository', () => {
     });
   });
 
+  describe('findByEmailWithPassword', () => {
+    it('should return user with password when email exists', async () => {
+      const userWithPassword = { ...mockUser, password: 'hashed_password' };
+      mockQueryBuilder.getOne.mockResolvedValue(userWithPassword);
+
+      const result = await userRepository.findByEmailWithPassword(mockUser.email);
+
+      expect(result).toEqual(userWithPassword);
+      expect(mockTypeOrmRepository.createQueryBuilder).toHaveBeenCalledWith('user');
+      expect(mockQueryBuilder.addSelect).toHaveBeenCalledWith('user.password');
+      expect(mockQueryBuilder.where).toHaveBeenCalledWith('user.email = :email', {
+        email: mockUser.email,
+      });
+      expect(mockQueryBuilder.getOne).toHaveBeenCalledTimes(1);
+    });
+
+    it('should return null when email not found', async () => {
+      mockQueryBuilder.getOne.mockResolvedValue(null);
+
+      const result = await userRepository.findByEmailWithPassword('nonexistent@example.com');
+
+      expect(result).toBeNull();
+      expect(mockTypeOrmRepository.createQueryBuilder).toHaveBeenCalledWith('user');
+      expect(mockQueryBuilder.addSelect).toHaveBeenCalledWith('user.password');
+      expect(mockQueryBuilder.where).toHaveBeenCalledWith('user.email = :email', {
+        email: 'nonexistent@example.com',
+      });
+      expect(mockQueryBuilder.getOne).toHaveBeenCalledTimes(1);
+    });
+
+    it('should handle database errors', async () => {
+      const dbError = new Error('Database query failed');
+      mockQueryBuilder.getOne.mockRejectedValue(dbError);
+
+      await expect(userRepository.findByEmailWithPassword(mockUser.email)).rejects.toThrow(
+        'Database query failed'
+      );
+    });
+
+    it('should include password in select', async () => {
+      const userWithPassword = { ...mockUser, password: 'hashed_password' };
+      mockQueryBuilder.getOne.mockResolvedValue(userWithPassword);
+
+      const result = await userRepository.findByEmailWithPassword(mockUser.email);
+
+      expect(result).toHaveProperty('password');
+      expect(result?.password).toBe('hashed_password');
+    });
+  });
+
   describe('Integration-like scenarios', () => {
     it('should handle create then find workflow', async () => {
       const newUserData = {
@@ -306,6 +374,22 @@ describe('UserRepository', () => {
       expect(mockTypeOrmRepository.findOne).toHaveBeenCalledWith({
         where: { id: mockUser.id },
       });
+    });
+
+    it('should handle findByEmailWithPassword then update workflow', async () => {
+      const userWithPassword = { ...mockUser, password: 'old_password' };
+      const updateData = { password: 'new_password' };
+      const updatedUser = { ...userWithPassword, ...updateData };
+
+      mockQueryBuilder.getOne.mockResolvedValue(userWithPassword);
+      mockTypeOrmRepository.update.mockResolvedValue({ affected: 1, raw: {}, generatedMaps: [] });
+      mockTypeOrmRepository.findOne.mockResolvedValue(updatedUser);
+
+      const found = await userRepository.findByEmailWithPassword(mockUser.email);
+      expect(found).toEqual(userWithPassword);
+
+      const updated = await userRepository.update(mockUser.id, updateData);
+      expect(updated).toEqual(updatedUser);
     });
   });
 });

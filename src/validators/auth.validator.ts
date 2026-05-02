@@ -10,6 +10,12 @@ export const loginSchema = Joi.object({
   }),
 });
 
+export const refreshTokenSchema = Joi.object({
+  refreshToken: Joi.string().required().messages({
+    'any.required': 'Refresh token is required',
+  }),
+});
+
 export type LoginInput = {
   email: string;
   password: string;
@@ -24,5 +30,9 @@ export interface LoginResponse {
     createdAt: Date;
     updatedAt: Date;
   };
-  message: string;
+  tokens: {
+    accessToken: string;
+    refreshToken: string;
+    expiresIn: string;
+  };
 }
