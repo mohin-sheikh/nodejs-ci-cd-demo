@@ -211,7 +211,6 @@ describe('PasswordService', () => {
     });
 
     it('should accept password with exactly 128 characters', () => {
-      // Create a password with 128 characters that meets requirements
       let password = 'Test@123';
       while (password.length < 128) {
         password += 'a';

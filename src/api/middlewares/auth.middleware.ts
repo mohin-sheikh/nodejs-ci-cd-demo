@@ -19,7 +19,7 @@ export const authenticate = async (req: Request, res: Response, next: NextFuncti
       return ResponseHandler.unauthorized(res, 'No token provided. Please login first.');
     }
 
-    const token = authHeader.substring(7); // Remove 'Bearer ' prefix
+    const token = authHeader.substring(7);
     const decoded = JWTService.verifyAccessToken(token);
 
     req.user = decoded;
@@ -49,7 +49,6 @@ export const optionalAuth = async (req: Request, res: Response, next: NextFuncti
     }
     next();
   } catch {
-    // If token is invalid, just proceed without user
     next();
   }
 };

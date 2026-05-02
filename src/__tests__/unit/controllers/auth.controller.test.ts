@@ -211,7 +211,6 @@ describe('AuthController', () => {
 
     it('should call next with error when an unexpected error occurs', async () => {
       const error = new Error('Unexpected error');
-      // Simulate an error by making the method throw
       const originalJson = mockResponse.json;
       mockResponse.json = jest.fn().mockImplementation(() => {
         throw error;
@@ -231,7 +230,6 @@ describe('AuthController', () => {
 
       expect(mockNext).toHaveBeenCalledWith(error);
 
-      // Restore original mock
       mockResponse.json = originalJson;
     });
   });

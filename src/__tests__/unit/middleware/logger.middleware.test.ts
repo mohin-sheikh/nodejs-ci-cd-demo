@@ -1,7 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { requestLogger } from '../../../api/middlewares/logger.middleware';
 
-// Define a type for the response json function
 type JsonFunction = (body: unknown) => Response;
 
 describe('Logger Middleware', () => {
@@ -213,7 +212,6 @@ describe('Logger Middleware', () => {
     expect(logCall).toBeDefined();
 
     const bodyString = logCall?.[1] as string;
-    // Current implementation only masks root-level password, not nested
     expect(bodyString).toContain('"password":"secret123"');
     expect(bodyString).toContain('"oldPassword":"old123"');
   });

@@ -66,7 +66,6 @@ describe('AuthService', () => {
 
     (UserRepository as jest.Mock).mockImplementation(() => mockUserRepository);
 
-    // Properly assign mock implementations without using 'any'
     Object.assign(PasswordService, {
       verify: mockPasswordService.verify,
       hash: mockPasswordService.hash,

@@ -9,7 +9,6 @@ jest.mock('../../../config/database', () => ({
   },
 }));
 
-// Define the QueryBuilder mock type
 interface MockQueryBuilder {
   addSelect: jest.Mock;
   where: jest.Mock;
@@ -34,7 +33,6 @@ describe('UserRepository', () => {
   beforeEach(() => {
     jest.clearAllMocks();
 
-    // Mock QueryBuilder
     mockQueryBuilder = {
       addSelect: jest.fn().mockReturnThis(),
       where: jest.fn().mockReturnThis(),

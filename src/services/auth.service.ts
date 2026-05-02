@@ -42,7 +42,6 @@ export class AuthService {
       await this.userRepository.update(user.id, { password: newHash });
     }
 
-    // Generate JWT tokens
     const tokens = JWTService.generateTokens({
       id: user.id,
       email: user.email,

@@ -7,10 +7,8 @@ import { authenticate, requireActiveUser } from '../middlewares/auth.middleware'
 const router = Router();
 const userController = new UserController();
 
-// Public routes (no authentication required)
 router.post('/', validate(createUserSchema), userController.createUser.bind(userController));
 
-// Protected routes (authentication required for all other endpoints)
 router.use(authenticate);
 router.use(requireActiveUser);
 

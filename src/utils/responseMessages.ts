@@ -28,7 +28,6 @@ export enum ResponseMessages {
   DUPLICATE_ENTRY = 'Duplicate entry',
   MISSING_REQUIRED_FIELDS = 'Missing required fields',
 
-  // Add to existing enum
   TOKEN_EXPIRED = 'Token expired. Please login again',
   INVALID_TOKEN = 'Invalid token',
   NO_TOKEN_PROVIDED = 'No token provided. Please login first',

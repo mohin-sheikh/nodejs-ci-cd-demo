@@ -1,9 +1,7 @@
-// Mock jsonwebtoken before importing anything
 const mockSign = jest.fn();
 const mockVerify = jest.fn();
 const mockDecode = jest.fn();
 
-// Create actual error classes for instanceof checks
 class MockTokenExpiredError extends Error {
   constructor(message: string) {
     super(message);
@@ -26,10 +24,8 @@ jest.mock('jsonwebtoken', () => ({
   JsonWebTokenError: MockJsonWebTokenError,
 }));
 
-// Store the original env
 const originalEnv = { ...process.env };
 
-// Define the JWTService type
 interface JWTServiceType {
   generateTokens: (payload: { id: string; email: string; name: string }) => {
     accessToken: string;
@@ -54,13 +50,11 @@ describe('JWTService', () => {
   let JWTService: JWTServiceType;
 
   beforeAll(async () => {
-    // Set test environment variables
     process.env.JWT_SECRET = 'test-secret';
     process.env.JWT_REFRESH_SECRET = 'test-refresh-secret';
     process.env.JWT_EXPIRES_IN = '7d';
     process.env.JWT_REFRESH_EXPIRES_IN = '30d';
 
-    // Import the module after setting env vars
     const module = await import('../../../services/jwt.service');
     JWTService = module.JWTService as JWTServiceType;
   });
@@ -70,7 +64,6 @@ describe('JWTService', () => {
   });
 
   afterAll(() => {
-    // Restore original env
     process.env = { ...originalEnv };
   });
 
@@ -97,11 +90,9 @@ describe('JWTService', () => {
     });
 
     it('should use default secrets when env variables are not set', async () => {
-      // Create a fresh module with different env vars
       delete process.env.JWT_SECRET;
       delete process.env.JWT_REFRESH_SECRET;
 
-      // Reset modules and re-import
       jest.resetModules();
 
       const module = await import('../../../services/jwt.service');
@@ -125,21 +116,17 @@ describe('JWTService', () => {
         expiresIn: '30d',
       });
 
-      // Restore env vars for other tests
       process.env.JWT_SECRET = 'test-secret';
       process.env.JWT_REFRESH_SECRET = 'test-refresh-secret';
     });
 
     it('should use default expiresIn when env variables are not set for expiration', async () => {
-      // Save original values
       const originalExpiresIn = process.env.JWT_EXPIRES_IN;
       const originalRefreshExpiresIn = process.env.JWT_REFRESH_EXPIRES_IN;
 
-      // Delete expiration env vars
       delete process.env.JWT_EXPIRES_IN;
       delete process.env.JWT_REFRESH_EXPIRES_IN;
 
-      // Reset modules and re-import
       jest.resetModules();
 
       const module = await import('../../../services/jwt.service');
@@ -154,7 +141,6 @@ describe('JWTService', () => {
       expect(result).toBeDefined();
       expect(result.accessToken).toBe(mockAccessToken);
       expect(result.refreshToken).toBe(mockRefreshToken);
-      // Default expiresIn should be '7d'
       expect(result.expiresIn).toBe('7d');
 
       expect(mockSign).toHaveBeenCalledWith(mockPayload, 'test-secret', {
@@ -164,21 +150,17 @@ describe('JWTService', () => {
         expiresIn: '30d',
       });
 
-      // Restore env vars
       if (originalExpiresIn) process.env.JWT_EXPIRES_IN = originalExpiresIn;
       if (originalRefreshExpiresIn) process.env.JWT_REFRESH_EXPIRES_IN = originalRefreshExpiresIn;
     });
 
     it('should handle numeric expiresIn values', async () => {
-      // Save original values
       const originalExpiresIn = process.env.JWT_EXPIRES_IN;
       const originalRefreshExpiresIn = process.env.JWT_REFRESH_EXPIRES_IN;
 
-      // Set numeric expiration values
-      process.env.JWT_EXPIRES_IN = '3600'; // 1 hour in seconds
-      process.env.JWT_REFRESH_EXPIRES_IN = '604800'; // 7 days in seconds
+      process.env.JWT_EXPIRES_IN = '3600';
+      process.env.JWT_REFRESH_EXPIRES_IN = '604800';
 
-      // Reset modules and re-import
       jest.resetModules();
 
       const module = await import('../../../services/jwt.service');
@@ -200,7 +182,6 @@ describe('JWTService', () => {
         expiresIn: '604800',
       });
 
-      // Restore env vars
       if (originalExpiresIn) process.env.JWT_EXPIRES_IN = originalExpiresIn;
       if (originalRefreshExpiresIn) process.env.JWT_REFRESH_EXPIRES_IN = originalRefreshExpiresIn;
     });

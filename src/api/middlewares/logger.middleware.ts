@@ -1,7 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 
 export const requestLogger = (req: Request, res: Response, next: NextFunction) => {
-  // Ignore favicon requests entirely
   if (req.url === '/favicon.ico') {
     return next();
   }
