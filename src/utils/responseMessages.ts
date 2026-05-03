@@ -14,6 +14,20 @@ export enum ResponseMessages {
   LOGIN_SUCCESS = 'Login successful',
   INVALID_CREDENTIALS = 'Invalid email or password',
 
+  REFRESH_TOKEN_REQUIRED = 'Refresh token is required',
+  INVALID_REFRESH_TOKEN = 'Invalid or expired refresh token',
+  USER_NOT_AUTHENTICATED = 'User not authenticated',
+  NO_TOKEN_PROVIDED = 'No token provided. Please login first.',
+  TOKEN_EXPIRED = 'Token expired. Please login again.',
+  INVALID_TOKEN = 'Invalid token. Please login again.',
+  AUTHENTICATION_REQUIRED = 'Authentication required',
+  LOGOUT_SUCCESS = 'Logged out successfully',
+  LOGOUT_ALL_SUCCESS = 'Logged out from all devices successfully',
+  SESSIONS_RETRIEVED = 'Active sessions retrieved',
+  TOKEN_REFRESHED = 'Token refreshed successfully',
+
+  TOO_MANY_REQUESTS = 'Too many requests. Please try again in {{seconds}} seconds.',
+
   BAD_REQUEST = 'Bad request',
   UNAUTHORIZED = 'Unauthorized access',
   FORBIDDEN = 'Access forbidden',
@@ -27,10 +41,4 @@ export enum ResponseMessages {
   DATABASE_ERROR = 'Database error',
   DUPLICATE_ENTRY = 'Duplicate entry',
   MISSING_REQUIRED_FIELDS = 'Missing required fields',
-
-  TOKEN_EXPIRED = 'Token expired. Please login again',
-  INVALID_TOKEN = 'Invalid token',
-  NO_TOKEN_PROVIDED = 'No token provided. Please login first',
-  REFRESH_TOKEN_EXPIRED = 'Refresh token expired. Please login again',
-  TOKEN_REFRESHED = 'Token refreshed successfully',
 }

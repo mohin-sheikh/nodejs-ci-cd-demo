@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import RedisService from '../../services/redis.service';
 import { ResponseHandler } from '../../utils/response';
+import { ResponseMessages } from '../../utils/responseMessages';
 
 interface RateLimitConfig {
   windowSeconds: number;
@@ -31,11 +32,8 @@ export const rateLimit = (config: Partial<RateLimitConfig> = {}) => {
       res.setHeader('X-RateLimit-Reset', Math.floor(Date.now() / 1000) + ttl);
 
       if (current > maxRequests) {
-        return ResponseHandler.error(
-          res,
-          `Too many requests. Please try again in ${ttl} seconds.`,
-          429
-        );
+        const message = ResponseMessages.TOO_MANY_REQUESTS.replace('{{seconds}}', ttl.toString());
+        return ResponseHandler.error(res, message, 429);
       }
 
       next();

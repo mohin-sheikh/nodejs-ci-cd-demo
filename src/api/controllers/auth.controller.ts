@@ -30,16 +30,16 @@ export class AuthController {
       const { refreshToken } = req.body;
 
       if (!refreshToken) {
-        return ResponseHandler.badRequest(res, 'Refresh token is required');
+        return ResponseHandler.badRequest(res, ResponseMessages.REFRESH_TOKEN_REQUIRED);
       }
 
       const newTokens = await this.authService.refreshToken(refreshToken);
 
       if (!newTokens) {
-        return ResponseHandler.unauthorized(res, 'Invalid or expired refresh token');
+        return ResponseHandler.unauthorized(res, ResponseMessages.INVALID_REFRESH_TOKEN);
       }
 
-      return ResponseHandler.success(res, { tokens: newTokens }, 'Token refreshed successfully');
+      return ResponseHandler.success(res, { tokens: newTokens }, ResponseMessages.TOKEN_REFRESHED);
     } catch (error) {
       next(error);
     }
@@ -48,10 +48,10 @@ export class AuthController {
   async getCurrentUser(req: Request, res: Response, next: NextFunction) {
     try {
       if (!req['user']) {
-        return ResponseHandler.unauthorized(res, 'User not authenticated');
+        return ResponseHandler.unauthorized(res, ResponseMessages.USER_NOT_AUTHENTICATED);
       }
 
-      return ResponseHandler.success(res, { user: req['user'] }, 'Current user retrieved');
+      return ResponseHandler.success(res, { user: req['user'] }, ResponseMessages.SUCCESS);
     } catch (error) {
       next(error);
     }
@@ -61,19 +61,19 @@ export class AuthController {
     try {
       const authHeader = req.headers.authorization;
       if (!authHeader || !authHeader.startsWith('Bearer ')) {
-        return ResponseHandler.badRequest(res, 'No token provided');
+        return ResponseHandler.badRequest(res, ResponseMessages.NO_TOKEN_PROVIDED);
       }
 
       const token = authHeader.substring(7);
       const userId = req.user?.id;
 
       if (!userId) {
-        return ResponseHandler.unauthorized(res, 'User not authenticated');
+        return ResponseHandler.unauthorized(res, ResponseMessages.USER_NOT_AUTHENTICATED);
       }
 
       await this.authService.logout(userId, token);
 
-      return ResponseHandler.success(res, {}, 'Logged out successfully');
+      return ResponseHandler.success(res, {}, ResponseMessages.LOGOUT_SUCCESS);
     } catch (error) {
       next(error);
     }
@@ -84,12 +84,12 @@ export class AuthController {
       const userId = req.user?.id;
 
       if (!userId) {
-        return ResponseHandler.unauthorized(res, 'User not authenticated');
+        return ResponseHandler.unauthorized(res, ResponseMessages.USER_NOT_AUTHENTICATED);
       }
 
       await this.authService.logoutAllDevices(userId);
 
-      return ResponseHandler.success(res, {}, 'Logged out from all devices successfully');
+      return ResponseHandler.success(res, {}, ResponseMessages.LOGOUT_ALL_SUCCESS);
     } catch (error) {
       next(error);
     }
@@ -100,12 +100,12 @@ export class AuthController {
       const userId = req.user?.id;
 
       if (!userId) {
-        return ResponseHandler.unauthorized(res, 'User not authenticated');
+        return ResponseHandler.unauthorized(res, ResponseMessages.USER_NOT_AUTHENTICATED);
       }
 
       const sessions = await this.authService.getActiveSessions(userId);
 
-      return ResponseHandler.success(res, { sessions }, 'Active sessions retrieved');
+      return ResponseHandler.success(res, { sessions }, ResponseMessages.SESSIONS_RETRIEVED);
     } catch (error) {
       next(error);
     }

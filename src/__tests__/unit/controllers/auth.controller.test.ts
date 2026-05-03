@@ -19,6 +19,7 @@ describe('AuthController', () => {
     id: '123e4567-e89b-12d3-a456-426614174000',
     name: 'John Doe',
     email: 'john@example.com',
+    jti: 'abcd1234-5678-efgh-ijkl-9012mnopqrst',
     isActive: true,
     createdAt: mockDate,
     updatedAt: mockDate,
@@ -176,6 +177,7 @@ describe('AuthController', () => {
         id: mockUser.id,
         email: mockUser.email,
         name: mockUser.name,
+        jti: mockUser.jti,
       };
 
       await authController.getCurrentUser(
@@ -185,7 +187,7 @@ describe('AuthController', () => {
       );
 
       expect(mockResponse.json).toHaveBeenCalledWith({
-        message: 'Current user retrieved',
+        message: 'Success',
         statusCode: 200,
         data: { user: mockRequest.user },
       });
@@ -220,6 +222,7 @@ describe('AuthController', () => {
         id: mockUser.id,
         email: mockUser.email,
         name: mockUser.name,
+        jti: mockUser.jti,
       };
 
       await authController.getCurrentUser(

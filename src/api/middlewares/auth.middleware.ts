@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { JWTService, TokenPayload } from '../../services/jwt.service';
 import { ResponseHandler } from '../../utils/response';
+import { ResponseMessages } from '../../utils/responseMessages';
 
 /* eslint-disable @typescript-eslint/no-namespace */
 declare global {
@@ -16,7 +17,7 @@ export const authenticate = async (req: Request, res: Response, next: NextFuncti
     const authHeader = req.headers.authorization;
 
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return ResponseHandler.unauthorized(res, 'No token provided. Please login first.');
+      return ResponseHandler.unauthorized(res, ResponseMessages.NO_TOKEN_PROVIDED);
     }
 
     const token = authHeader.substring(7);
@@ -27,14 +28,14 @@ export const authenticate = async (req: Request, res: Response, next: NextFuncti
   } catch (error) {
     if (error instanceof Error) {
       if (error.message === 'Token expired') {
-        return ResponseHandler.unauthorized(res, 'Token expired. Please login again.');
+        return ResponseHandler.unauthorized(res, ResponseMessages.TOKEN_EXPIRED);
       }
       if (error.message === 'Invalid token') {
-        return ResponseHandler.unauthorized(res, 'Invalid token. Please login again.');
+        return ResponseHandler.unauthorized(res, ResponseMessages.INVALID_TOKEN);
       }
       return ResponseHandler.unauthorized(res, error.message);
     }
-    return ResponseHandler.unauthorized(res, 'Authentication failed');
+    return ResponseHandler.unauthorized(res, ResponseMessages.UNAUTHORIZED);
   }
 };
 
@@ -55,7 +56,7 @@ export const optionalAuth = async (req: Request, res: Response, next: NextFuncti
 
 export const requireActiveUser = async (req: Request, res: Response, next: NextFunction) => {
   if (!req.user) {
-    return ResponseHandler.unauthorized(res, 'Authentication required');
+    return ResponseHandler.unauthorized(res, ResponseMessages.AUTHENTICATION_REQUIRED);
   }
   next();
 };
