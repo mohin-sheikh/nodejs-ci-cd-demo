@@ -1,4 +1,4 @@
-import express, { Application, Request, Response } from 'express';
+import express, { Express, Request, Response } from 'express';
 import cors from 'cors';
 import { errorHandler } from './api/middlewares/error.middleware';
 import { requestLogger } from './api/middlewares/logger.middleware';
@@ -7,8 +7,9 @@ import { ResponseHandler } from './utils/response';
 import { ResponseMessages } from './utils/responseMessages';
 import RedisConnection from './config/redis';
 import apiRoutes from './api/routes';
+import { setupSwagger } from './config/swagger';
 
-const app: Application = express();
+const app: Express = express();
 
 app.use(requestLogger);
 app.use(express.json());
@@ -18,6 +19,8 @@ app.use(
     credentials: true,
   })
 );
+
+setupSwagger(app);
 
 app.get('/health', async (_req: Request, res: Response) => {
   const redisHealthy = await RedisConnection.healthCheck();
