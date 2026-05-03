@@ -16,6 +16,25 @@ services:
       timeout: 5s
       retries: 5
     restart: unless-stopped
+    networks:
+      - app_network
+
+  redis:
+    image: redis:7-alpine
+    container_name: node_ts_demo_redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:-redis123}
+    healthcheck:
+      test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - app_network
 
   pgadmin:
     image: dpage/pgadmin4
@@ -30,7 +49,14 @@ services:
     volumes:
       - pgadmin_data:/var/lib/pgadmin
     restart: unless-stopped
+    networks:
+      - app_network
 
 volumes:
   postgres_data:
   pgadmin_data:
+  redis_data:
+
+networks:
+  app_network:
+    driver: bridge

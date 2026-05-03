@@ -4,6 +4,7 @@ export interface TokenPayload {
   id: string;
   email: string;
   name: string;
+  jti: string;
 }
 
 export interface TokenResponse {
@@ -16,19 +17,19 @@ export class JWTService {
   private static readonly JWT_SECRET = process.env.JWT_SECRET || 'default-secret-key';
   private static readonly JWT_REFRESH_SECRET =
     process.env.JWT_REFRESH_SECRET || 'default-refresh-key';
-
   private static readonly JWT_EXPIRES_IN: SignOptions['expiresIn'] =
     (process.env.JWT_EXPIRES_IN as SignOptions['expiresIn']) || '7d';
-
   private static readonly JWT_REFRESH_EXPIRES_IN: SignOptions['expiresIn'] =
     (process.env.JWT_REFRESH_EXPIRES_IN as SignOptions['expiresIn']) || '30d';
 
-  static generateTokens(payload: TokenPayload): TokenResponse {
-    const accessToken = jwt.sign(payload, this.JWT_SECRET, {
+  static generateTokens(payload: Omit<TokenPayload, 'jti'>, tokenId: string): TokenResponse {
+    const fullPayload: TokenPayload = { ...payload, jti: tokenId };
+
+    const accessToken = jwt.sign(fullPayload, this.JWT_SECRET, {
       expiresIn: this.JWT_EXPIRES_IN,
     });
 
-    const refreshToken = jwt.sign(payload, this.JWT_REFRESH_SECRET, {
+    const refreshToken = jwt.sign(fullPayload, this.JWT_REFRESH_SECRET, {
       expiresIn: this.JWT_REFRESH_EXPIRES_IN,
     });
 

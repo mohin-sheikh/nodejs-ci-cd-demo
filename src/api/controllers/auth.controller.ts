@@ -56,4 +56,58 @@ export class AuthController {
       next(error);
     }
   }
+
+  async logout(req: Request, res: Response, next: NextFunction) {
+    try {
+      const authHeader = req.headers.authorization;
+      if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        return ResponseHandler.badRequest(res, 'No token provided');
+      }
+
+      const token = authHeader.substring(7);
+      const userId = req.user?.id;
+
+      if (!userId) {
+        return ResponseHandler.unauthorized(res, 'User not authenticated');
+      }
+
+      await this.authService.logout(userId, token);
+
+      return ResponseHandler.success(res, {}, 'Logged out successfully');
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async logoutAllDevices(req: Request, res: Response, next: NextFunction) {
+    try {
+      const userId = req.user?.id;
+
+      if (!userId) {
+        return ResponseHandler.unauthorized(res, 'User not authenticated');
+      }
+
+      await this.authService.logoutAllDevices(userId);
+
+      return ResponseHandler.success(res, {}, 'Logged out from all devices successfully');
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async getActiveSessions(req: Request, res: Response, next: NextFunction) {
+    try {
+      const userId = req.user?.id;
+
+      if (!userId) {
+        return ResponseHandler.unauthorized(res, 'User not authenticated');
+      }
+
+      const sessions = await this.authService.getActiveSessions(userId);
+
+      return ResponseHandler.success(res, { sessions }, 'Active sessions retrieved');
+    } catch (error) {
+      next(error);
+    }
+  }
 }

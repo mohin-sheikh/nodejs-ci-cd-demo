@@ -7,6 +7,7 @@ import { requestLogger } from './api/middlewares/logger.middleware';
 import { AppDataSource } from './config/database';
 import { ResponseHandler } from './utils/response';
 import { ResponseMessages } from './utils/responseMessages';
+import RedisConnection from './config/redis';
 
 const app: Application = express();
 
@@ -21,13 +22,18 @@ app.use(
   })
 );
 
-app.get('/health', (_req: Request, res: Response) => {
+app.get('/health', async (_req: Request, res: Response) => {
+  const redisHealthy = await RedisConnection.healthCheck();
+
   const healthData = {
     status: 'OK',
     environment: process.env.NODE_ENV || 'development',
     database: AppDataSource.isInitialized ? 'connected' : 'disconnected',
+    redis: redisHealthy ? 'connected' : 'disconnected',
   };
-  return ResponseHandler.success(res, healthData, ResponseMessages.HEALTH_CHECK_PASSED);
+
+  const statusCode = AppDataSource.isInitialized && redisHealthy ? 200 : 503;
+  return ResponseHandler.success(res, healthData, ResponseMessages.HEALTH_CHECK_PASSED, statusCode);
 });
 
 app.get('/', (_req: Request, res: Response) => {
