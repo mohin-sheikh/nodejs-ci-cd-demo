@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-This is a production-ready Node.js TypeScript application featuring a complete CI/CD pipeline, PostgreSQL database integration, JWT-based authentication, and comprehensive testing. The project demonstrates modern backend development practices with a focus on security, maintainability, and automated deployments.
+This is a production-ready Node.js TypeScript application featuring a complete CI/CD pipeline, PostgreSQL database integration, Redis caching, JWT-based authentication, and comprehensive testing. The project demonstrates modern backend development practices with a focus on security, maintainability, and automated deployments.
 
 ## Technology Stack
 
@@ -13,6 +13,7 @@ This is a production-ready Node.js TypeScript application featuring a complete C
 | Framework | Express | 4.21.2 |
 | Database ORM | TypeORM | 0.3.28 |
 | Database | PostgreSQL | 15 |
+| Cache | Redis | 7 |
 | Authentication | JWT | 9.0.3 |
 | Password Hashing | Argon2 | 0.44.0 |
 | Validation | Joi | 18.1.1 |
@@ -34,6 +35,9 @@ node-ts-cicd-demo/
 │
 ├── .husky/                           # Git pre-commit hooks
 │   └── pre-commit                    # Runs lint-staged before commits
+│
+├── contrib/                          # Additional resources
+│   └── Node.js TypeScript CI-CD Demo API.postman_collection.json
 │
 ├── src/
 │   ├── __tests__/                    # Test files
@@ -59,13 +63,16 @@ node-ts-cicd-demo/
 │   │   │   ├── auth.middleware.ts    # JWT authentication
 │   │   │   ├── error.middleware.ts   # Global error handler
 │   │   │   ├── logger.middleware.ts  # Request logging
+│   │   │   ├── rateLimit.middleware.ts # Rate limiting
 │   │   │   └── validation.middleware.ts # Request validation
 │   │   └── routes/                   # API route definitions
+│   │       ├── index.ts              # Route aggregation
 │   │       ├── auth.routes.ts        # Auth endpoints
 │   │       └── user.routes.ts        # User CRUD endpoints
 │   │
 │   ├── config/
 │   │   ├── database.ts               # TypeORM data source configuration
+│   │   ├── redis.ts                  # Redis connection configuration
 │   │   └── validate.ts               # Environment variable validation
 │   │
 │   ├── entities/
@@ -81,6 +88,7 @@ node-ts-cicd-demo/
 │   │   ├── auth.service.ts           # Authentication logic
 │   │   ├── jwt.service.ts            # JWT token operations
 │   │   ├── password.service.ts       # Password hashing and validation
+│   │   ├── redis.service.ts          # Redis cache operations
 │   │   └── user.service.ts           # User business logic
 │   │
 │   ├── utils/
@@ -101,7 +109,7 @@ node-ts-cicd-demo/
 ├── .env.test                         # Test environment variables
 ├── .eslintrc.json                    # ESLint configuration
 ├── .prettierrc                       # Prettier configuration
-├── docker-compose.yml                # Docker services (PostgreSQL + pgAdmin)
+├── docker-compose.yml                # Docker services (PostgreSQL + Redis + pgAdmin)
 ├── Dockerfile                        # Multi-stage Docker build
 ├── jest.config.js                    # Jest testing configuration
 ├── package.json                      # Project dependencies and scripts
@@ -118,12 +126,26 @@ Database Integration
 - Connection pooling and automatic reconnection
 - Health check endpoint monitors database connectivity
 
+Redis Caching
+- Redis integration for session management and rate limiting
+- Token blacklisting for secure logout
+- Active session tracking across multiple devices
+- User profile caching for improved performance
+
 Authentication and Security
 - JWT-based authentication with access and refresh tokens
 - Argon2 password hashing (industry standard for password security)
 - Password strength validation with configurable requirements
 - Protected routes with authentication middleware
 - Automatic password rehashing when security parameters change
+- Refresh token rotation and blacklisting
+
+Rate Limiting
+- Login rate limiting (5 attempts per 15 minutes)
+- API rate limiting (100 requests per minute)
+- Strict rate limiting (10 requests per hour for sensitive operations)
+- Redis-based rate limit counters
+- Rate limit headers for client-side awareness
 
 API Design
 - RESTful API architecture following best practices
@@ -145,15 +167,17 @@ DevOps and Deployment
 - Automated testing on pull requests and pushes
 - Security scanning with npm audit
 - Automatic Docker image building and pushing
-- Docker Compose for local development with PostgreSQL and pgAdmin
+- Docker Compose for local development with PostgreSQL, Redis, and pgAdmin
 
 ## Prerequisites
 
 - Node.js 18.x or 22.x
 - npm 9 or higher
 - PostgreSQL 15 (or Docker for containerized database)
+- Redis 7 (or Docker for containerized Redis)
 - Git
 - Docker (optional, for containerization)
+- Postman (for API testing, collection included in contrib folder)
 
 ## Installation
 
@@ -181,6 +205,12 @@ DB_USERNAME=postgres
 DB_PASSWORD=postgres
 DB_DATABASE=node_ts_demo
 
+# Redis Configuration
+REDIS_HOST=localhost
+REDIS_PORT=6379
+REDIS_PASSWORD=redis123
+REDIS_DB=0
+
 # CORS Configuration
 ALLOWED_ORIGINS=http://localhost:3000
 
@@ -202,18 +232,22 @@ JWT_REFRESH_EXPIRES_IN=30d
 | DB_USERNAME | PostgreSQL username | Yes | - |
 | DB_PASSWORD | PostgreSQL password | Yes | - |
 | DB_DATABASE | PostgreSQL database name | Yes | - |
+| REDIS_HOST | Redis host | No | localhost |
+| REDIS_PORT | Redis port | No | 6379 |
+| REDIS_PASSWORD | Redis password | No | - |
+| REDIS_DB | Redis database number | No | 0 |
 | ALLOWED_ORIGINS | CORS allowed origins (comma-separated) | No | * |
 | JWT_SECRET | JWT access token secret | No | default-secret-key |
 | JWT_EXPIRES_IN | JWT access token expiration | No | 7d |
 | JWT_REFRESH_SECRET | JWT refresh token secret | No | default-refresh-key |
 | JWT_REFRESH_EXPIRES_IN | JWT refresh token expiration | No | 30d |
 
-## Database Setup
+## Database and Redis Setup
 
 ### Using Docker Compose (Recommended for Development)
 
 ```bash
-# Start PostgreSQL and pgAdmin containers
+# Start PostgreSQL, Redis, and pgAdmin containers
 npm run docker:up
 
 # Stop containers
@@ -225,11 +259,12 @@ npm run docker:logs
 
 The Docker Compose setup includes:
 - PostgreSQL 15 on port 5433 (to avoid conflict with local PostgreSQL)
+- Redis 7 on port 6379 with password authentication
 - pgAdmin 4 on port 5050 (login: admin@admin.com / admin)
 
-### Using Local PostgreSQL
+### Using Local PostgreSQL and Redis
 
-If you have PostgreSQL installed locally, update the `.env` file with your local configuration:
+If you have PostgreSQL and Redis installed locally, update the `.env` file with your local configuration:
 
 ```env
 DB_HOST=localhost
@@ -237,6 +272,11 @@ DB_PORT=5432
 DB_USERNAME=postgres
 DB_PASSWORD=your_password
 DB_DATABASE=node_ts_demo
+
+REDIS_HOST=localhost
+REDIS_PORT=6379
+REDIS_PASSWORD=your_redis_password
+REDIS_DB=0
 ```
 
 ### Run Database Migrations
@@ -317,6 +357,29 @@ NODE_ENV=production npm start
 http://localhost:3000
 ```
 
+### Postman Collection
+
+A complete Postman collection for testing all API endpoints is available in the `contrib` folder:
+
+```
+contrib/Node.js TypeScript CI-CD Demo API.postman_collection.json
+```
+
+To use the collection:
+1. Open Postman
+2. Click Import
+3. Select the collection file from the contrib folder
+4. Set the environment variable `baseUrl` to `http://localhost:3000`
+5. Run the requests in the recommended order
+
+The collection includes:
+- Public endpoints (health check, welcome, user registration)
+- Authentication endpoints (login, refresh token, logout)
+- Protected user management endpoints (CRUD operations)
+- Rate limiting test scenarios
+- Error case testing
+- Complete authentication workflow
+
 ### Response Format
 
 All API responses follow a standardized format:
@@ -339,23 +402,6 @@ Error Response:
 }
 ```
 
-Paginated Response:
-```json
-{
-  "statusCode": 200,
-  "message": "Success",
-  "data": [ ... ],
-  "pagination": {
-    "page": 1,
-    "limit": 10,
-    "total": 100,
-    "totalPages": 10,
-    "hasNext": true,
-    "hasPrev": false
-  }
-}
-```
-
 ### Health Check
 
 ```
@@ -370,7 +416,8 @@ Response:
   "data": {
     "status": "OK",
     "environment": "development",
-    "database": "connected"
+    "database": "connected",
+    "redis": "connected"
   }
 }
 ```
@@ -486,6 +533,73 @@ Response:
       "refreshToken": "eyJhbGciOiJIUzI1NiIs...",
       "expiresIn": "7d"
     }
+  }
+}
+```
+
+#### Logout
+
+```
+POST /api/auth/logout
+```
+
+Headers:
+```
+Authorization: Bearer <access_token>
+```
+
+Response:
+```json
+{
+  "statusCode": 200,
+  "message": "Logged out successfully",
+  "data": {}
+}
+```
+
+#### Logout All Devices
+
+```
+POST /api/auth/logout-all
+```
+
+Headers:
+```
+Authorization: Bearer <access_token>
+```
+
+Response:
+```json
+{
+  "statusCode": 200,
+  "message": "Logged out from all devices successfully",
+  "data": {}
+}
+```
+
+#### Get Active Sessions
+
+```
+GET /api/auth/sessions
+```
+
+Headers:
+```
+Authorization: Bearer <access_token>
+```
+
+Response:
+```json
+{
+  "statusCode": 200,
+  "message": "Active sessions retrieved",
+  "data": {
+    "sessions": [
+      {
+        "tokenId": "abc123...",
+        "createdAt": "2024-01-01T00:00:00.000Z"
+      }
+    ]
   }
 }
 ```
@@ -625,6 +739,21 @@ Passwords must meet the following criteria:
 - At least one number (0-9)
 - At least one special character (@$!%*?&)
 
+## Rate Limiting
+
+The application implements three levels of rate limiting:
+
+| Limiter | Window | Max Requests | Endpoints Protected |
+|---------|--------|--------------|---------------------|
+| Login Rate Limit | 15 minutes | 5 | POST /api/auth/login |
+| API Rate Limit | 1 minute | 100 | GET /api/users, GET /api/users/:id, PUT /api/users/:id |
+| Strict Rate Limit | 1 hour | 10 | POST /api/users, DELETE /api/users/:id |
+
+Rate limit headers are included in all responses:
+- `X-RateLimit-Limit`: Maximum requests allowed in the window
+- `X-RateLimit-Remaining`: Remaining requests in the current window
+- `X-RateLimit-Reset`: Timestamp when the limit resets
+
 ## Testing
 
 ### Test Structure
@@ -730,9 +859,13 @@ docker run -p 3000:3000 node-ts-cicd-demo
 docker run -d -p 3000:3000 \
   -e NODE_ENV=production \
   -e DB_HOST=postgres \
+  -e DB_PORT=5432 \
   -e DB_USERNAME=postgres \
   -e DB_PASSWORD=postgres \
   -e DB_DATABASE=node_ts_demo \
+  -e REDIS_HOST=redis \
+  -e REDIS_PORT=6379 \
+  -e REDIS_PASSWORD=redis123 \
   --name node-app \
   node-ts-cicd-demo
 
@@ -753,9 +886,10 @@ docker pull mohinsheikh/node-ts-cicd-demo:latest
 
 The docker-compose.yml file provides a complete development environment:
 - PostgreSQL 15 database on port 5433
+- Redis 7 on port 6379 with password authentication
 - pgAdmin 4 on port 5050 for database management
 - Persistent volumes for data storage
-- Health checks for database readiness
+- Health checks for database and Redis readiness
 
 ## CI/CD Pipeline
 
@@ -792,15 +926,15 @@ Pipeline Stages:
 
 ### Development Branch Pipeline (ci-cd-dev.yml)
 
-Triggers on pushes and pull requests to `dev` branch with PostgreSQL integration testing.
+Triggers on pushes and pull requests to `dev` branch with PostgreSQL and Redis integration testing.
 
 Pipeline Stages:
 
-1. Build and Test with PostgreSQL
+1. Build and Test with PostgreSQL and Redis
    - Spins up PostgreSQL 15 container as a service
-   - Creates .env file with database configuration
+   - Creates .env file with database and Redis configuration
    - Runs database migrations
-   - Executes tests with database integration
+   - Executes tests with database and Redis integration
 
 2. Security Scan
    - Runs npm audit for vulnerability detection
@@ -815,8 +949,8 @@ Pipeline Stages:
 | main | Push | Build, Test, Security Scan, Docker Build, Deploy |
 | main | Pull Request | Build, Test, Security Scan |
 | develop | Push | Build, Test |
-| dev | Push | Build, Test with PostgreSQL, Security Scan, Docker Build |
-| dev | Pull Request | Build, Test with PostgreSQL |
+| dev | Push | Build, Test with PostgreSQL and Redis, Security Scan, Docker Build |
+| dev | Pull Request | Build, Test with PostgreSQL and Redis |
 
 ### Required GitHub Secrets
 
@@ -840,6 +974,7 @@ The application implements centralized error handling with appropriate HTTP stat
 | 403 | Forbidden | Authenticated but not authorized |
 | 404 | Not Found | Resource does not exist |
 | 409 | Conflict | Duplicate email or constraint violation |
+| 429 | Too Many Requests | Rate limit exceeded |
 | 500 | Internal Server Error | Unexpected server errors |
 
 ## Security Features
@@ -855,11 +990,17 @@ JWT Security
 - Configurable expiration times
 - Token validation with proper error handling
 - Refresh token rotation support
+- Token blacklisting on logout
 
 Input Validation
 - Joi validation for all request bodies, parameters, and query strings
 - Automatic stripping of unknown fields
 - Detailed validation error messages
+
+Rate Limiting
+- Redis-based rate limit counters
+- Protection against brute force attacks
+- Different limits for different endpoint types
 
 Database Security
 - Parameterized queries prevent SQL injection
@@ -891,6 +1032,9 @@ docker run -d -p 3000:3000 \
   -e DB_USERNAME=your-db-user \
   -e DB_PASSWORD=your-db-password \
   -e DB_DATABASE=your-db-name \
+  -e REDIS_HOST=your-redis-host \
+  -e REDIS_PORT=6379 \
+  -e REDIS_PASSWORD=your-redis-password \
   -e JWT_SECRET=your-jwt-secret \
   -e JWT_REFRESH_SECRET=your-refresh-secret \
   --name node-api \
@@ -918,6 +1062,15 @@ Solution:
 - Verify database container is running: `docker ps`
 - Check database credentials in .env file
 - Ensure database port is not blocked
+- Run `npm run docker:up` to start containers
+
+### Redis Connection Issues
+
+Problem: Cannot connect to Redis
+Solution:
+- Verify Redis container is running: `docker ps`
+- Check Redis credentials in .env file
+- Ensure Redis port is not blocked
 - Run `npm run docker:up` to start containers
 
 ### Migration Errors
