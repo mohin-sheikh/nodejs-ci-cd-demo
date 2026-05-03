@@ -8,6 +8,43 @@ export const swaggerSpec = {
     version: '1.0.0',
     description: `
     A production-ready Node.js TypeScript application with JWT authentication, PostgreSQL database, Redis caching, and comprehensive CI/CD pipeline.
+    
+    ## API Versioning
+    
+    This API uses versioning with the prefix \`/v1\`. All endpoints are accessible under:
+    - \`http://localhost:3000/api/v1/\`
+    - Legacy support: \`http://localhost:3000/api/\` (redirects to v1)
+    
+    ## Rate Limiting
+    
+    This API implements three levels of rate limiting:
+    
+    | Limiter | Window | Max Requests | Endpoints |
+    |---------|--------|--------------|-----------|
+    | Login | 15 minutes | 5 | POST /api/v1/auth/login |
+    | API | 1 minute | 100 | GET /api/v1/users, GET /api/v1/users/:id, PUT /api/v1/users/:id |
+    | Strict | 1 hour | 10 | POST /api/v1/users, DELETE /api/v1/users/:id |
+    
+    Rate limit information is returned in response headers:
+    - \`X-RateLimit-Limit\`: Maximum requests allowed
+    - \`X-RateLimit-Remaining\`: Remaining requests
+    - \`X-RateLimit-Reset\`: Reset timestamp
+    
+    ## Authentication
+    
+    Most endpoints require JWT authentication. To authenticate:
+    1. Call \`POST /api/v1/auth/login\` to obtain access and refresh tokens
+    2. Include the access token in the \`Authorization\` header: \`Bearer <access_token>\`
+    3. When the access token expires, use \`POST /api/v1/auth/refresh\` with the refresh token
+    
+    ## Password Requirements
+    
+    - Minimum 8 characters
+    - Maximum 128 characters
+    - At least one uppercase letter
+    - At least one lowercase letter
+    - At least one number
+    - At least one special character (@$!%*?&)
     `,
     license: {
       name: 'MIT',
@@ -20,8 +57,12 @@ export const swaggerSpec = {
   },
   servers: [
     {
-      url: 'http://localhost:3000',
-      description: 'Development Server',
+      url: 'http://localhost:3000/api/v1',
+      description: 'Development Server (Version 1)',
+    },
+    {
+      url: 'http://localhost:3000/api',
+      description: 'Development Server (Legacy - redirects to v1)',
     },
   ],
   components: {
@@ -113,6 +154,13 @@ export const swaggerSpec = {
           password: { type: 'string', example: 'Test@123456' },
         },
       },
+      RefreshTokenInput: {
+        type: 'object',
+        required: ['refreshToken'],
+        properties: {
+          refreshToken: { type: 'string', description: 'Valid refresh token' },
+        },
+      },
       Tokens: {
         type: 'object',
         properties: {
@@ -126,13 +174,6 @@ export const swaggerSpec = {
         properties: {
           user: { $ref: '#/components/schemas/User' },
           tokens: { $ref: '#/components/schemas/Tokens' },
-        },
-      },
-      RefreshTokenInput: {
-        type: 'object',
-        required: ['refreshToken'],
-        properties: {
-          refreshToken: { type: 'string', description: 'Valid refresh token' },
         },
       },
       Session: {
@@ -208,6 +249,32 @@ export const swaggerSpec = {
           },
         },
       },
+      TooManyRequests: {
+        description: 'Rate limit exceeded',
+        content: {
+          'application/json': {
+            schema: { $ref: '#/components/schemas/ErrorResponse' },
+            example: {
+              statusCode: 429,
+              message: 'Too many requests. Please try again in 45 seconds.',
+              data: {},
+            },
+          },
+        },
+      },
+      Conflict: {
+        description: 'Resource conflict (e.g., duplicate email)',
+        content: {
+          'application/json': {
+            schema: { $ref: '#/components/schemas/ErrorResponse' },
+            example: {
+              statusCode: 409,
+              message: 'User with this email already exists',
+              data: {},
+            },
+          },
+        },
+      },
     },
   },
   paths: {
@@ -276,7 +343,7 @@ export const swaggerSpec = {
         },
       },
     },
-    '/api/auth/login': {
+    '/auth/login': {
       post: {
         summary: 'User login',
         tags: ['Authentication'],
@@ -318,10 +385,11 @@ export const swaggerSpec = {
           },
           401: { $ref: '#/components/responses/Unauthorized' },
           400: { $ref: '#/components/responses/ValidationError' },
+          429: { $ref: '#/components/responses/TooManyRequests' },
         },
       },
     },
-    '/api/auth/refresh': {
+    '/auth/refresh': {
       post: {
         summary: 'Refresh access token',
         tags: ['Authentication'],
@@ -354,10 +422,11 @@ export const swaggerSpec = {
             },
           },
           401: { $ref: '#/components/responses/Unauthorized' },
+          400: { $ref: '#/components/responses/ValidationError' },
         },
       },
     },
-    '/api/auth/me': {
+    '/auth/me': {
       get: {
         summary: 'Get current user',
         tags: ['Authentication'],
@@ -386,7 +455,7 @@ export const swaggerSpec = {
         },
       },
     },
-    '/api/auth/logout': {
+    '/auth/logout': {
       post: {
         summary: 'Logout current session',
         tags: ['Authentication'],
@@ -409,7 +478,30 @@ export const swaggerSpec = {
         },
       },
     },
-    '/api/auth/sessions': {
+    '/auth/logout-all': {
+      post: {
+        summary: 'Logout from all devices',
+        tags: ['Authentication'],
+        security: [{ bearerAuth: [] }],
+        responses: {
+          200: {
+            description: 'Logged out from all devices successfully',
+            content: {
+              'application/json': {
+                schema: { $ref: '#/components/schemas/SuccessResponse' },
+                example: {
+                  statusCode: 200,
+                  message: 'Logged out from all devices successfully',
+                  data: {},
+                },
+              },
+            },
+          },
+          401: { $ref: '#/components/responses/Unauthorized' },
+        },
+      },
+    },
+    '/auth/sessions': {
       get: {
         summary: 'Get active sessions',
         tags: ['Authentication'],
@@ -439,7 +531,7 @@ export const swaggerSpec = {
         },
       },
     },
-    '/api/users': {
+    '/users': {
       post: {
         summary: 'Register a new user',
         tags: ['Users'],
@@ -473,7 +565,8 @@ export const swaggerSpec = {
             },
           },
           400: { $ref: '#/components/responses/ValidationError' },
-          409: { $ref: '#/components/responses/ValidationError' },
+          409: { $ref: '#/components/responses/Conflict' },
+          429: { $ref: '#/components/responses/TooManyRequests' },
         },
       },
       get: {
@@ -504,10 +597,11 @@ export const swaggerSpec = {
             },
           },
           401: { $ref: '#/components/responses/Unauthorized' },
+          429: { $ref: '#/components/responses/TooManyRequests' },
         },
       },
     },
-    '/api/users/{id}': {
+    '/users/{id}': {
       get: {
         summary: 'Get user by ID',
         tags: ['Users'],
@@ -536,6 +630,7 @@ export const swaggerSpec = {
           },
           401: { $ref: '#/components/responses/Unauthorized' },
           404: { $ref: '#/components/responses/NotFound' },
+          429: { $ref: '#/components/responses/TooManyRequests' },
         },
       },
       put: {
@@ -575,6 +670,7 @@ export const swaggerSpec = {
           401: { $ref: '#/components/responses/Unauthorized' },
           404: { $ref: '#/components/responses/NotFound' },
           400: { $ref: '#/components/responses/ValidationError' },
+          429: { $ref: '#/components/responses/TooManyRequests' },
         },
       },
       delete: {
@@ -598,6 +694,7 @@ export const swaggerSpec = {
           },
           401: { $ref: '#/components/responses/Unauthorized' },
           404: { $ref: '#/components/responses/NotFound' },
+          429: { $ref: '#/components/responses/TooManyRequests' },
         },
       },
     },

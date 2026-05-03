@@ -1,9 +1,13 @@
 import { Router } from 'express';
-import { UserController } from '../controllers/user.controller';
-import { validate, validateParams } from '../middlewares/validation.middleware';
-import { createUserSchema, updateUserSchema, userIdSchema } from '../../validators/user.validator';
-import { authenticate, requireActiveUser } from '../middlewares/auth.middleware';
-import { apiRateLimit, strictRateLimit } from '../middlewares/rateLimit.middleware';
+import { UserController } from '../../controllers/user.controller';
+import { validate, validateParams } from '../../middlewares/validation.middleware';
+import {
+  createUserSchema,
+  updateUserSchema,
+  userIdSchema,
+} from '../../../validators/user.validator';
+import { authenticate, requireActiveUser } from '../../middlewares/auth.middleware';
+import { apiRateLimit, strictRateLimit } from '../../middlewares/rateLimit.middleware';
 
 const router = Router();
 const userController = new UserController();

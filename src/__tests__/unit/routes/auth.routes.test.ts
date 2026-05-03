@@ -34,7 +34,7 @@ jest.mock('../../../validators/auth.validator', () => ({
   refreshTokenSchema: {},
 }));
 
-import router from '../../../api/routes/auth.routes';
+import router from '../../../api/routes/v1/auth.routes';
 
 interface RouteLayer {
   route?: {
@@ -46,7 +46,7 @@ interface RouteLayer {
   };
 }
 
-describe('Auth Routes', () => {
+describe('Auth Routes (v1)', () => {
   it('should export a Router instance', () => {
     expect(router).toBeDefined();
     expect(router.stack).toBeDefined();

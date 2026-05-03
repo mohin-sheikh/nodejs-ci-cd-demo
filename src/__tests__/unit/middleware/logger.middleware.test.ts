@@ -56,16 +56,31 @@ describe('Logger Middleware', () => {
   });
 
   it('should log response status and duration when json is called', () => {
-    requestLogger(mockRequest as Request, mockResponse as Response, mockNext);
-    const responseBody = { test: 'data' };
+    const originalDateNow = Date.now;
+    const mockStartTime = 1000000;
+    const mockEndTime = 1000100;
 
+    let callCount = 0;
+    Date.now = jest.fn(() => {
+      callCount++;
+      if (callCount === 1) return mockStartTime;
+      return mockEndTime;
+    });
+
+    requestLogger(mockRequest as Request, mockResponse as Response, mockNext);
+
+    const responseBody = { test: 'data' };
     (mockResponse.json as JsonFunction)(responseBody);
 
     const logCalls = consoleLogSpy.mock.calls;
-    const responseLog = logCalls.find((call) => call[0] === 'GET /test - 200 - 0ms');
+    const responseLog = logCalls.find(
+      (call) => call[0] && call[0].startsWith('GET /test - 200 - ')
+    );
 
     expect(responseLog).toBeDefined();
     expect(responseLog?.[0]).toMatch(/GET \/test - 200 - \d+ms/);
+
+    Date.now = originalDateNow;
   });
 
   it('should log body for POST requests', () => {
@@ -214,5 +229,16 @@ describe('Logger Middleware', () => {
     const bodyString = logCall?.[1] as string;
     expect(bodyString).toContain('"password":"secret123"');
     expect(bodyString).toContain('"oldPassword":"old123"');
+  });
+
+  it('should log response with different status codes', () => {
+    mockResponse.statusCode = 404;
+
+    requestLogger(mockRequest as Request, mockResponse as Response, mockNext);
+    (mockResponse.json as JsonFunction)({});
+
+    const logCalls = consoleLogSpy.mock.calls;
+    const responseLog = logCalls.find((call) => call[0] && call[0].includes('GET /test - 404 - '));
+    expect(responseLog).toBeDefined();
   });
 });

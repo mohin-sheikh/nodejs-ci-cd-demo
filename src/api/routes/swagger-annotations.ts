@@ -1,6 +1,68 @@
 /**
  * @swagger
+ * openapi: 3.0.0
+ * info:
+ *   title: Node.js TypeScript CI/CD Demo API
+ *   version: 1.0.0
+ *   description: |
+ *     ## API Versioning
+ *
+ *     This API uses versioning with the prefix `/v1`. All endpoints are accessible under:
+ *     - `http://localhost:3000/api/v1/`
+ *     - Legacy support: `http://localhost:3000/api/` (redirects to v1)
+ *
+ *     ## Rate Limiting
+ *
+ *     This API implements three levels of rate limiting:
+ *
+ *     | Limiter | Window | Max Requests | Endpoints |
+ *     |---------|--------|--------------|-----------|
+ *     | Login | 15 minutes | 5 | POST /api/v1/auth/login |
+ *     | API | 1 minute | 100 | GET /api/v1/users, GET /api/v1/users/:id, PUT /api/v1/users/:id |
+ *     | Strict | 1 hour | 10 | POST /api/v1/users, DELETE /api/v1/users/:id |
+ *
+ *     Rate limit information is returned in response headers:
+ *     - `X-RateLimit-Limit`: Maximum requests allowed
+ *     - `X-RateLimit-Remaining`: Remaining requests
+ *     - `X-RateLimit-Reset`: Reset timestamp
+ *
+ *     ## Authentication
+ *
+ *     Most endpoints require JWT authentication. To authenticate:
+ *     1. Call `POST /api/v1/auth/login` to obtain access and refresh tokens
+ *     2. Include the access token in the `Authorization` header: `Bearer <access_token>`
+ *     3. When the access token expires, use `POST /api/v1/auth/refresh` with the refresh token
+ *
+ *     ## Password Requirements
+ *
+ *     - Minimum 8 characters
+ *     - Maximum 128 characters
+ *     - At least one uppercase letter
+ *     - At least one lowercase letter
+ *     - At least one number
+ *     - At least one special character (@$!%*?&)
+ *
+ *   license:
+ *     name: MIT
+ *     url: https://opensource.org/licenses/MIT
+ *   contact:
+ *     name: Mohin Sheikh (Github)
+ *     url: https://github.com/mohin-sheikh
+ *
+ * servers:
+ *   - url: http://localhost:3000/api/v1
+ *     description: Development Server (Version 1)
+ *   - url: http://localhost:3000/api
+ *     description: Development Server (Legacy - redirects to v1)
+ *
  * components:
+ *   securitySchemes:
+ *     bearerAuth:
+ *       type: http
+ *       scheme: bearer
+ *       bearerFormat: JWT
+ *       description: Enter your JWT access token
+ *
  *   schemas:
  *     RateLimitHeaders:
  *       type: object
@@ -36,28 +98,6 @@
  *           example:
  *             statusCode: 401
  *             message: No token provided. Please login first.
- *             data: {}
- *
- *     Forbidden:
- *       description: Authenticated but not authorized
- *       content:
- *         application/json:
- *           schema:
- *             $ref: '#/components/schemas/ErrorResponse'
- *           example:
- *             statusCode: 403
- *             message: Access forbidden
- *             data: {}
- *
- *     NotFound:
- *       description: Resource not found
- *       content:
- *         application/json:
- *           schema:
- *             $ref: '#/components/schemas/ErrorResponse'
- *           example:
- *             statusCode: 404
- *             message: User not found
  *             data: {}
  *
  *     Conflict:
@@ -148,10 +188,10 @@
  *                 message: Welcome to Node.js TypeScript CI/CD Demo API
  */
 
-// Authentication Routes
+// Authentication Routes (Version 1)
 /**
  * @swagger
- * /api/auth/login:
+ * /auth/login:
  *   post:
  *     summary: User login
  *     description: Authenticates a user and returns access and refresh tokens
@@ -192,155 +232,10 @@
  *         $ref: '#/components/responses/ValidationError'
  */
 
-/**
- * @swagger
- * /api/auth/refresh:
- *   post:
- *     summary: Refresh access token
- *     description: Obtains a new access token using a valid refresh token
- *     tags: [Authentication]
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             $ref: '#/components/schemas/RefreshTokenInput'
- *     responses:
- *       200:
- *         description: Token refreshed successfully
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/SuccessResponse'
- *             example:
- *               statusCode: 200
- *               message: Token refreshed successfully
- *               data:
- *                 tokens:
- *                   accessToken: "eyJhbGciOiJIUzI1NiIs..."
- *                   refreshToken: "eyJhbGciOiJIUzI1NiIs..."
- *                   expiresIn: "7d"
- *       400:
- *         description: Refresh token is required
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/ErrorResponse'
- *       401:
- *         description: Invalid or expired refresh token
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/ErrorResponse'
- */
-
-/**
- * @swagger
- * /api/auth/me:
- *   get:
- *     summary: Get current user
- *     description: Returns the profile of the currently authenticated user
- *     tags: [Authentication]
- *     security:
- *       - bearerAuth: []
- *     responses:
- *       200:
- *         description: Current user retrieved successfully
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/SuccessResponse'
- *             example:
- *               statusCode: 200
- *               message: Current user retrieved
- *               data:
- *                 user:
- *                   id: "123e4567-e89b-12d3-a456-426614174000"
- *                   email: "john@example.com"
- *                   name: "John Doe"
- *       401:
- *         $ref: '#/components/responses/Unauthorized'
- */
-
-/**
- * @swagger
- * /api/auth/logout:
- *   post:
- *     summary: Logout current session
- *     description: Invalidates the current access and refresh tokens
- *     tags: [Authentication]
- *     security:
- *       - bearerAuth: []
- *     responses:
- *       200:
- *         description: Logged out successfully
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/SuccessResponse'
- *             example:
- *               statusCode: 200
- *               message: Logged out successfully
- *               data: {}
- *       401:
- *         $ref: '#/components/responses/Unauthorized'
- */
-
-/**
- * @swagger
- * /api/auth/logout-all:
- *   post:
- *     summary: Logout from all devices
- *     description: Invalidates all sessions for the current user across all devices
- *     tags: [Authentication]
- *     security:
- *       - bearerAuth: []
- *     responses:
- *       200:
- *         description: Logged out from all devices successfully
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/SuccessResponse'
- *             example:
- *               statusCode: 200
- *               message: Logged out from all devices successfully
- *               data: {}
- *       401:
- *         $ref: '#/components/responses/Unauthorized'
- */
-
-/**
- * @swagger
- * /api/auth/sessions:
- *   get:
- *     summary: Get active sessions
- *     description: Returns all active sessions for the current user
- *     tags: [Authentication]
- *     security:
- *       - bearerAuth: []
- *     responses:
- *       200:
- *         description: Active sessions retrieved
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/SuccessResponse'
- *             example:
- *               statusCode: 200
- *               message: Active sessions retrieved
- *               data:
- *                 sessions:
- *                   - tokenId: "abc123..."
- *                     createdAt: "2024-01-01T00:00:00.000Z"
- *       401:
- *         $ref: '#/components/responses/Unauthorized'
- */
-
 // User Routes (Public - Register)
 /**
  * @swagger
- * /api/users:
+ * /users:
  *   post:
  *     summary: Register a new user
  *     description: Creates a new user account (public endpoint with rate limiting)
@@ -374,30 +269,28 @@
  *         $ref: '#/components/responses/Conflict'
  *       429:
  *         $ref: '#/components/responses/TooManyRequests'
- */
-
-// User Routes (Protected)
-/**
- * @swagger
- * /api/users:
+ *
  *   get:
  *     summary: Get all users
  *     description: Returns a list of all users (requires authentication)
  *     tags: [Users]
  *     security:
  *       - bearerAuth: []
- *     parameters:
- *       - $ref: '#/components/parameters/pageQuery'
- *       - $ref: '#/components/parameters/limitQuery'
- *       - $ref: '#/components/parameters/sortQuery'
- *       - $ref: '#/components/parameters/searchQuery'
  *     responses:
  *       200:
  *         description: Users retrieved successfully
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/PaginatedUsersResponse'
+ *               $ref: '#/components/schemas/SuccessResponse'
+ *             example:
+ *               statusCode: 200
+ *               message: Users retrieved successfully
+ *               data:
+ *                 - id: "123e4567-e89b-12d3-a456-426614174000"
+ *                   name: "John Doe"
+ *                   email: "john@example.com"
+ *                   isActive: true
  *       401:
  *         $ref: '#/components/responses/Unauthorized'
  *       429:
@@ -406,7 +299,7 @@
 
 /**
  * @swagger
- * /api/users/{id}:
+ * /users/{id}:
  *   get:
  *     summary: Get user by ID
  *     description: Returns a specific user by their UUID
@@ -414,7 +307,13 @@
  *     security:
  *       - bearerAuth: []
  *     parameters:
- *       - $ref: '#/components/parameters/userIdParam'
+ *       - name: id
+ *         in: path
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *         description: User ID (UUID format)
  *     responses:
  *       200:
  *         description: User retrieved successfully
@@ -430,8 +329,6 @@
  *                 name: "John Doe"
  *                 email: "john@example.com"
  *                 isActive: true
- *                 createdAt: "2024-01-01T00:00:00.000Z"
- *                 updatedAt: "2024-01-01T00:00:00.000Z"
  *       401:
  *         $ref: '#/components/responses/Unauthorized'
  *       404:
@@ -446,7 +343,13 @@
  *     security:
  *       - bearerAuth: []
  *     parameters:
- *       - $ref: '#/components/parameters/userIdParam'
+ *       - name: id
+ *         in: path
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *         description: User ID (UUID format)
  *     requestBody:
  *       required: true
  *       content:
@@ -468,8 +371,6 @@
  *                 name: "Jane Doe"
  *                 email: "john@example.com"
  *                 isActive: true
- *                 createdAt: "2024-01-01T00:00:00.000Z"
- *                 updatedAt: "2024-01-01T00:00:01.000Z"
  *       401:
  *         $ref: '#/components/responses/Unauthorized'
  *       404:
@@ -486,7 +387,13 @@
  *     security:
  *       - bearerAuth: []
  *     parameters:
- *       - $ref: '#/components/parameters/userIdParam'
+ *       - name: id
+ *         in: path
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *         description: User ID (UUID format)
  *     responses:
  *       204:
  *         description: User deleted successfully
@@ -504,44 +411,4 @@
  *         $ref: '#/components/responses/NotFound'
  *       429:
  *         $ref: '#/components/responses/TooManyRequests'
- */
-
-// OpenAPI Info Extension
-/**
- * @swagger
- * openapi: 3.0.0
- * info:
- *   title: Node.js TypeScript CI/CD Demo API
- *   version: 1.0.0
- *   description: |
- *     ## Rate Limiting
- *
- *     This API implements three levels of rate limiting:
- *
- *     | Limiter | Window | Max Requests | Endpoints |
- *     |---------|--------|--------------|-----------|
- *     | Login | 15 minutes | 5 | POST /api/auth/login |
- *     | API | 1 minute | 100 | GET /api/users, GET /api/users/:id, PUT /api/users/:id |
- *     | Strict | 1 hour | 10 | POST /api/users, DELETE /api/users/:id |
- *
- *     Rate limit information is returned in response headers:
- *     - `X-RateLimit-Limit`: Maximum requests allowed
- *     - `X-RateLimit-Remaining`: Remaining requests
- *     - `X-RateLimit-Reset`: Reset timestamp
- *
- *     ## Authentication
- *
- *     Most endpoints require JWT authentication. To authenticate:
- *     1. Call `POST /api/auth/login` to obtain access and refresh tokens
- *     2. Include the access token in the `Authorization` header: `Bearer <access_token>`
- *     3. When the access token expires, use `POST /api/auth/refresh` with the refresh token
- *
- *     ## Password Requirements
- *
- *     - Minimum 8 characters
- *     - Maximum 128 characters
- *     - At least one uppercase letter
- *     - At least one lowercase letter
- *     - At least one number
- *     - At least one special character (@$!%*?&)
  */

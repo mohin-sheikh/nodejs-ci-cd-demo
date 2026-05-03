@@ -21,7 +21,7 @@ jest.mock('../../../validators/user.validator', () => ({
   userIdSchema: {},
 }));
 
-import router from '../../../api/routes/user.routes';
+import router from '../../../api/routes/v1/user.routes';
 
 interface RouteLayer {
   route?: {
@@ -35,7 +35,7 @@ interface RouteLayer {
   };
 }
 
-describe('User Routes', () => {
+describe('User Routes (v1)', () => {
   it('should export a Router instance', () => {
     expect(router).toBeDefined();
     expect(router.stack).toBeDefined();

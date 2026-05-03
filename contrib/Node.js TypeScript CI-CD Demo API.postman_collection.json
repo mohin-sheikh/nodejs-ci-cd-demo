@@ -2,13 +2,13 @@
   "info": {
     "_postman_id": "c59e05f2-ca4e-487c-80b6-baf2ab66ef91",
     "name": "Node.js TypeScript CI/CD Demo API",
-    "description": "Complete API test collection for Node.js TypeScript application with JWT authentication, PostgreSQL, and Redis",
+    "description": "Complete API test collection for Node.js TypeScript application with JWT authentication, PostgreSQL, and Redis\n\n## API Versioning\n\nThis API uses versioning with the prefix `/v1`. All endpoints are accessible under:\n- `{{baseUrl}}/api/v1/`\n- Legacy support: `{{baseUrl}}/api/` (redirects to v1)\n\n## Authentication\n\n1. Use `POST {{baseUrl}}/api/v1/auth/login` to login\n2. Copy the access token from response\n3. Set `accessToken` variable using the pre-request script or manually",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
     "_exporter_id": "18974135"
   },
   "item": [
     {
-      "name": "Public Endpoints",
+      "name": "Health & Root",
       "item": [
         {
           "name": "Health Check",
@@ -91,1198 +91,697 @@
             }
           },
           "response": []
-        },
-        {
-          "name": "Register User",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "pm.test('Status code is 201', () => {",
-                  "    pm.response.to.have.status(201);",
-                  "});",
-                  "",
-                  "pm.test('Response contains user data without password', () => {",
-                  "    const jsonData = pm.response.json();",
-                  "    pm.expect(jsonData.statusCode).to.eql(201);",
-                  "    pm.expect(jsonData.message).to.include('User created successfully');",
-                  "    pm.expect(jsonData.data).to.have.property('id');",
-                  "    pm.expect(jsonData.data).to.have.property('name');",
-                  "    pm.expect(jsonData.data).to.have.property('email');",
-                  "    pm.expect(jsonData.data).to.not.have.property('password');",
-                  "});",
-                  "",
-                  "if (pm.response.json().data && pm.response.json().data.id) {",
-                  "    pm.collectionVariables.set('userId', pm.response.json().data.id);",
-                  "}"
-                ],
-                "type": "text/javascript"
-              }
-            }
-          ],
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"name\": \"Test User\",\n  \"email\": \"testuser@example.com\",\n  \"password\": \"Test@123456\",\n  \"isActive\": true\n}"
-            },
-            "url": {
-              "raw": "{{baseUrl}}/api/users",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "users"
-              ]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Register User - Invalid Data",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "pm.test('Status code is 400', () => {",
-                  "    pm.response.to.have.status(400);",
-                  "});",
-                  "",
-                  "pm.test('Response contains validation errors', () => {",
-                  "    const jsonData = pm.response.json();",
-                  "    pm.expect(jsonData.statusCode).to.eql(400);",
-                  "    pm.expect(jsonData.message).to.include('Validation failed');",
-                  "});"
-                ],
-                "type": "text/javascript"
-              }
-            }
-          ],
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"name\": \"J\",\n  \"email\": \"invalid-email\",\n  \"password\": \"weak\"\n}"
-            },
-            "url": {
-              "raw": "{{baseUrl}}/api/users",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "users"
-              ]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Register User - Duplicate Email",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "pm.test('Status code is 500 or 409', () => {",
-                  "    pm.expect(pm.response.code === 409 || pm.response.code === 500);",
-                  "});"
-                ],
-                "type": "text/javascript"
-              }
-            }
-          ],
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"name\": \"Duplicate User\",\n  \"email\": \"testuser@example.com\",\n  \"password\": \"Test@123456\"\n}"
-            },
-            "url": {
-              "raw": "{{baseUrl}}/api/users",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "users"
-              ]
-            }
-          },
-          "response": []
         }
       ]
     },
     {
-      "name": "Authentication",
+      "name": "API Version 1 (Recommended)",
       "item": [
         {
-          "name": "Login - Success",
-          "event": [
+          "name": "Public Endpoints",
+          "item": [
             {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "pm.test('Status code is 200', () => {",
-                  "    pm.response.to.have.status(200);",
-                  "});",
-                  "",
-                  "pm.test('Response contains tokens', () => {",
-                  "    const jsonData = pm.response.json();",
-                  "    pm.expect(jsonData.statusCode).to.eql(200);",
-                  "    pm.expect(jsonData.message).to.include('Login successful');",
-                  "    pm.expect(jsonData.data).to.have.property('user');",
-                  "    pm.expect(jsonData.data).to.have.property('tokens');",
-                  "    pm.expect(jsonData.data.tokens).to.have.property('accessToken');",
-                  "    pm.expect(jsonData.data.tokens).to.have.property('refreshToken');",
-                  "});",
-                  "",
-                  "const jsonData = pm.response.json();",
-                  "if (jsonData.data && jsonData.data.tokens) {",
-                  "    pm.collectionVariables.set('accessToken', jsonData.data.tokens.accessToken);",
-                  "    pm.collectionVariables.set('refreshToken', jsonData.data.tokens.refreshToken);",
-                  "    pm.collectionVariables.set('userId', jsonData.data.user.id);",
-                  "}"
-                ],
-                "type": "text/javascript"
-              }
-            }
-          ],
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"email\": \"testuser@example.com\",\n  \"password\": \"Test@123456\"\n}"
-            },
-            "url": {
-              "raw": "{{baseUrl}}/api/auth/login",
-              "host": [
-                "{{baseUrl}}"
+              "name": "Register User",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test('Status code is 201', () => {",
+                      "    pm.response.to.have.status(201);",
+                      "});",
+                      "",
+                      "pm.test('Response contains user data without password', () => {",
+                      "    const jsonData = pm.response.json();",
+                      "    pm.expect(jsonData.statusCode).to.eql(201);",
+                      "    pm.expect(jsonData.message).to.include('User created successfully');",
+                      "    pm.expect(jsonData.data).to.have.property('id');",
+                      "    pm.expect(jsonData.data).to.have.property('name');",
+                      "    pm.expect(jsonData.data).to.have.property('email');",
+                      "    pm.expect(jsonData.data).to.not.have.property('password');",
+                      "});",
+                      "",
+                      "if (pm.response.json().data && pm.response.json().data.id) {",
+                      "    pm.collectionVariables.set('userId', pm.response.json().data.id);",
+                      "}"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
               ],
-              "path": [
-                "api",
-                "auth",
-                "login"
-              ]
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"Test User\",\n  \"email\": \"testuser@example.com\",\n  \"password\": \"Test@123456\",\n  \"isActive\": true\n}"
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/api/v1/users",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "users"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Register User - Invalid Data",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test('Status code is 400', () => {",
+                      "    pm.response.to.have.status(400);",
+                      "});",
+                      "",
+                      "pm.test('Response contains validation errors', () => {",
+                      "    const jsonData = pm.response.json();",
+                      "    pm.expect(jsonData.statusCode).to.eql(400);",
+                      "    pm.expect(jsonData.message).to.include('Validation failed');",
+                      "});"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"J\",\n  \"email\": \"invalid-email\",\n  \"password\": \"weak\"\n}"
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/api/v1/users",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "users"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Register User - Duplicate Email",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test('Status code is 500 or 409', () => {",
+                      "    pm.expect(pm.response.code === 409 || pm.response.code === 500);",
+                      "});"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"Duplicate User\",\n  \"email\": \"testuser@example.com\",\n  \"password\": \"Test@123456\"\n}"
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/api/v1/users",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "users"
+                  ]
+                }
+              },
+              "response": []
             }
-          },
-          "response": []
+          ]
         },
         {
-          "name": "Login - Invalid Credentials",
-          "event": [
+          "name": "Authentication",
+          "item": [
             {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "pm.test('Status code is 401', () => {",
-                  "    pm.response.to.have.status(401);",
-                  "});",
-                  "",
-                  "pm.test('Response indicates invalid credentials', () => {",
-                  "    const jsonData = pm.response.json();",
-                  "    pm.expect(jsonData.statusCode).to.eql(401);",
-                  "    pm.expect(jsonData.message).to.include('Invalid email or password');",
-                  "});"
-                ],
-                "type": "text/javascript"
-              }
-            }
-          ],
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"email\": \"testuser@example.com\",\n  \"password\": \"wrongpassword\"\n}"
-            },
-            "url": {
-              "raw": "{{baseUrl}}/api/auth/login",
-              "host": [
-                "{{baseUrl}}"
+              "name": "Login - Success",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test('Status code is 200', () => {",
+                      "    pm.response.to.have.status(200);",
+                      "});",
+                      "",
+                      "pm.test('Response contains tokens', () => {",
+                      "    const jsonData = pm.response.json();",
+                      "    pm.expect(jsonData.statusCode).to.eql(200);",
+                      "    pm.expect(jsonData.message).to.include('Login successful');",
+                      "    pm.expect(jsonData.data).to.have.property('user');",
+                      "    pm.expect(jsonData.data).to.have.property('tokens');",
+                      "    pm.expect(jsonData.data.tokens).to.have.property('accessToken');",
+                      "    pm.expect(jsonData.data.tokens).to.have.property('refreshToken');",
+                      "});",
+                      "",
+                      "const jsonData = pm.response.json();",
+                      "if (jsonData.data && jsonData.data.tokens) {",
+                      "    pm.collectionVariables.set('accessToken', jsonData.data.tokens.accessToken);",
+                      "    pm.collectionVariables.set('refreshToken', jsonData.data.tokens.refreshToken);",
+                      "    pm.collectionVariables.set('userId', jsonData.data.user.id);",
+                      "}"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
               ],
-              "path": [
-                "api",
-                "auth",
-                "login"
-              ]
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"email\": \"testuser@example.com\",\n  \"password\": \"Test@123456\"\n}"
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/api/v1/auth/login",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "auth",
+                    "login"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Login - Invalid Credentials",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test('Status code is 401', () => {",
+                      "    pm.response.to.have.status(401);",
+                      "});",
+                      "",
+                      "pm.test('Response indicates invalid credentials', () => {",
+                      "    const jsonData = pm.response.json();",
+                      "    pm.expect(jsonData.statusCode).to.eql(401);",
+                      "    pm.expect(jsonData.message).to.include('Invalid email or password');",
+                      "});"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"email\": \"testuser@example.com\",\n  \"password\": \"wrongpassword\"\n}"
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/api/v1/auth/login",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "auth",
+                    "login"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Refresh Token",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test('Status code is 200', () => {",
+                      "    pm.response.to.have.status(200);",
+                      "});",
+                      "",
+                      "pm.test('Response contains new tokens', () => {",
+                      "    const jsonData = pm.response.json();",
+                      "    pm.expect(jsonData.statusCode).to.eql(200);",
+                      "    pm.expect(jsonData.data).to.have.property('tokens');",
+                      "    pm.expect(jsonData.data.tokens).to.have.property('accessToken');",
+                      "    pm.expect(jsonData.data.tokens).to.have.property('refreshToken');",
+                      "});",
+                      "",
+                      "const jsonData = pm.response.json();",
+                      "if (jsonData.data && jsonData.data.tokens) {",
+                      "    pm.collectionVariables.set('accessToken', jsonData.data.tokens.accessToken);",
+                      "    pm.collectionVariables.set('refreshToken', jsonData.data.tokens.refreshToken);",
+                      "}"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"refreshToken\": \"{{refreshToken}}\"\n}"
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/api/v1/auth/refresh",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "auth",
+                    "refresh"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Get Current User",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test('Status code is 200', () => {",
+                      "    pm.response.to.have.status(200);",
+                      "});",
+                      "",
+                      "pm.test('Response contains current user data', () => {",
+                      "    const jsonData = pm.response.json();",
+                      "    pm.expect(jsonData.statusCode).to.eql(200);",
+                      "    pm.expect(jsonData.data).to.have.property('user');",
+                      "    pm.expect(jsonData.data.user).to.have.property('id');",
+                      "    pm.expect(jsonData.data.user).to.have.property('email');",
+                      "});"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{accessToken}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/v1/auth/me",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "auth",
+                    "me"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Get Active Sessions",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test('Status code is 200', () => {",
+                      "    pm.response.to.have.status(200);",
+                      "});",
+                      "",
+                      "pm.test('Response contains sessions array', () => {",
+                      "    const jsonData = pm.response.json();",
+                      "    pm.expect(jsonData.statusCode).to.eql(200);",
+                      "    pm.expect(jsonData.data).to.have.property('sessions');",
+                      "    pm.expect(Array.isArray(jsonData.data.sessions)).to.be.true;",
+                      "});"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{accessToken}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/v1/auth/sessions",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "auth",
+                    "sessions"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Logout",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test('Status code is 200', () => {",
+                      "    pm.response.to.have.status(200);",
+                      "});",
+                      "",
+                      "pm.test('Response indicates successful logout', () => {",
+                      "    const jsonData = pm.response.json();",
+                      "    pm.expect(jsonData.statusCode).to.eql(200);",
+                      "    pm.expect(jsonData.message).to.include('Logged out successfully');",
+                      "});"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{accessToken}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/v1/auth/logout",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "auth",
+                    "logout"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Logout All Devices",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test('Status code is 200', () => {",
+                      "    pm.response.to.have.status(200);",
+                      "});"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{accessToken}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/v1/auth/logout-all",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "auth",
+                    "logout-all"
+                  ]
+                }
+              },
+              "response": []
             }
-          },
-          "response": []
+          ]
         },
         {
-          "name": "Login - Rate Limit",
-          "event": [
+          "name": "User Management (Protected)",
+          "item": [
             {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "pm.test('After 5 attempts, should return 429', () => {",
-                  "    pm.expect(pm.response.code === 429 || pm.response.code === 401);",
-                  "});"
-                ],
-                "type": "text/javascript"
-              }
-            }
-          ],
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"email\": \"testuser@example.com\",\n  \"password\": \"Test@123456\"\n}"
-            },
-            "url": {
-              "raw": "{{baseUrl}}/api/auth/login",
-              "host": [
-                "{{baseUrl}}"
+              "name": "Get All Users",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test('Status code is 200', () => {",
+                      "    pm.response.to.have.status(200);",
+                      "});",
+                      "",
+                      "pm.test('Response contains users array', () => {",
+                      "    const jsonData = pm.response.json();",
+                      "    pm.expect(jsonData.statusCode).to.eql(200);",
+                      "    pm.expect(jsonData.message).to.include('Users retrieved successfully');",
+                      "    pm.expect(Array.isArray(jsonData.data)).to.be.true;",
+                      "});"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
               ],
-              "path": [
-                "api",
-                "auth",
-                "login"
-              ]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Refresh Token",
-          "event": [
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{accessToken}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/v1/users",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "users"
+                  ]
+                }
+              },
+              "response": []
+            },
             {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "pm.test('Status code is 200', () => {",
-                  "    pm.response.to.have.status(200);",
-                  "});",
-                  "",
-                  "pm.test('Response contains new tokens', () => {",
-                  "    const jsonData = pm.response.json();",
-                  "    pm.expect(jsonData.statusCode).to.eql(200);",
-                  "    pm.expect(jsonData.data).to.have.property('tokens');",
-                  "    pm.expect(jsonData.data.tokens).to.have.property('accessToken');",
-                  "    pm.expect(jsonData.data.tokens).to.have.property('refreshToken');",
-                  "});",
-                  "",
-                  "const jsonData = pm.response.json();",
-                  "if (jsonData.data && jsonData.data.tokens) {",
-                  "    pm.collectionVariables.set('accessToken', jsonData.data.tokens.accessToken);",
-                  "    pm.collectionVariables.set('refreshToken', jsonData.data.tokens.refreshToken);",
-                  "}"
-                ],
-                "type": "text/javascript"
-              }
-            }
-          ],
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"refreshToken\": \"{{refreshToken}}\"\n}"
-            },
-            "url": {
-              "raw": "{{baseUrl}}/api/auth/refresh",
-              "host": [
-                "{{baseUrl}}"
+              "name": "Get User by ID",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test('Status code is 200', () => {",
+                      "    pm.response.to.have.status(200);",
+                      "});",
+                      "",
+                      "pm.test('Response contains user data', () => {",
+                      "    const jsonData = pm.response.json();",
+                      "    pm.expect(jsonData.statusCode).to.eql(200);",
+                      "    pm.expect(jsonData.data).to.have.property('id');",
+                      "    pm.expect(jsonData.data).to.have.property('name');",
+                      "    pm.expect(jsonData.data).to.have.property('email');",
+                      "});"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
               ],
-              "path": [
-                "api",
-                "auth",
-                "refresh"
-              ]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Refresh Token - Missing Token",
-          "event": [
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{accessToken}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/v1/users/{{userId}}",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "users",
+                    "{{userId}}"
+                  ]
+                }
+              },
+              "response": []
+            },
             {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "pm.test('Status code is 400', () => {",
-                  "    pm.response.to.have.status(400);",
-                  "});",
-                  "",
-                  "pm.test('Response indicates missing token', () => {",
-                  "    const jsonData = pm.response.json();",
-                  "    pm.expect(jsonData.statusCode).to.eql(400);",
-                  "    pm.expect(jsonData.message).to.include('Refresh token is required');",
-                  "});"
-                ],
-                "type": "text/javascript"
-              }
-            }
-          ],
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{}"
-            },
-            "url": {
-              "raw": "{{baseUrl}}/api/auth/refresh",
-              "host": [
-                "{{baseUrl}}"
+              "name": "Update User",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test('Status code is 200', () => {",
+                      "    pm.response.to.have.status(200);",
+                      "});",
+                      "",
+                      "pm.test('Response contains updated user data', () => {",
+                      "    const jsonData = pm.response.json();",
+                      "    pm.expect(jsonData.statusCode).to.eql(200);",
+                      "    pm.expect(jsonData.message).to.include('User updated successfully');",
+                      "    pm.expect(jsonData.data).to.have.property('name', 'Updated User Name');",
+                      "});"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
               ],
-              "path": [
-                "api",
-                "auth",
-                "refresh"
-              ]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Refresh Token - Invalid Token",
-          "event": [
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{accessToken}}"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"Updated User Name\"\n}"
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/api/v1/users/{{userId}}",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "users",
+                    "{{userId}}"
+                  ]
+                }
+              },
+              "response": []
+            },
             {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "pm.test('Status code is 401', () => {",
-                  "    pm.response.to.have.status(401);",
-                  "});"
-                ],
-                "type": "text/javascript"
-              }
-            }
-          ],
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"refreshToken\": \"invalid-token-12345\"\n}"
-            },
-            "url": {
-              "raw": "{{baseUrl}}/api/auth/refresh",
-              "host": [
-                "{{baseUrl}}"
+              "name": "Delete User",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test('Status code is 204', () => {",
+                      "    pm.response.to.have.status(204);",
+                      "});"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
               ],
-              "path": [
-                "api",
-                "auth",
-                "refresh"
-              ]
+              "request": {
+                "method": "DELETE",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{accessToken}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/v1/users/{{userId}}",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "users",
+                    "{{userId}}"
+                  ]
+                }
+              },
+              "response": []
             }
-          },
-          "response": []
+          ]
         }
       ]
     },
     {
-      "name": "Authenticated User Endpoints",
+      "name": "Legacy API (v0 - Without Version Prefix)",
       "item": [
         {
-          "name": "Get Current User",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "pm.test('Status code is 200', () => {",
-                  "    pm.response.to.have.status(200);",
-                  "});",
-                  "",
-                  "pm.test('Response contains current user data', () => {",
-                  "    const jsonData = pm.response.json();",
-                  "    pm.expect(jsonData.statusCode).to.eql(200);",
-                  "    pm.expect(jsonData.data).to.have.property('user');",
-                  "    pm.expect(jsonData.data.user).to.have.property('id');",
-                  "    pm.expect(jsonData.data.user).to.have.property('email');",
-                  "});"
-                ],
-                "type": "text/javascript"
-              }
-            }
-          ],
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{accessToken}}"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/api/auth/me",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "auth",
-                "me"
-              ]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Get Current User - No Token",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "pm.test('Status code is 401', () => {",
-                  "    pm.response.to.have.status(401);",
-                  "});",
-                  "",
-                  "pm.test('Response indicates missing token', () => {",
-                  "    const jsonData = pm.response.json();",
-                  "    pm.expect(jsonData.statusCode).to.eql(401);",
-                  "    pm.expect(jsonData.message).to.include('Authentication required');",
-                  "});"
-                ],
-                "type": "text/javascript"
-              }
-            }
-          ],
+          "name": "NOTE: These endpoints are maintained for backward compatibility",
           "request": {
             "method": "GET",
             "header": [],
-            "url": {
-              "raw": "{{baseUrl}}/api/auth/me",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "auth",
-                "me"
-              ]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Get Active Sessions",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "pm.test('Status code is 200', () => {",
-                  "    pm.response.to.have.status(200);",
-                  "});",
-                  "",
-                  "pm.test('Response contains sessions array', () => {",
-                  "    const jsonData = pm.response.json();",
-                  "    pm.expect(jsonData.statusCode).to.eql(200);",
-                  "    pm.expect(jsonData.data).to.have.property('sessions');",
-                  "    pm.expect(Array.isArray(jsonData.data.sessions)).to.be.true;",
-                  "});"
-                ],
-                "type": "text/javascript"
-              }
-            }
-          ],
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{accessToken}}"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/api/auth/sessions",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "auth",
-                "sessions"
-              ]
-            }
-          },
-          "response": []
-        }
-      ]
-    },
-    {
-      "name": "User Management (Protected)",
-      "item": [
-        {
-          "name": "Get All Users",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "pm.test('Status code is 200', () => {",
-                  "    pm.response.to.have.status(200);",
-                  "});",
-                  "",
-                  "pm.test('Response contains users array', () => {",
-                  "    const jsonData = pm.response.json();",
-                  "    pm.expect(jsonData.statusCode).to.eql(200);",
-                  "    pm.expect(jsonData.message).to.include('Users retrieved successfully');",
-                  "    pm.expect(Array.isArray(jsonData.data)).to.be.true;",
-                  "});",
-                  "",
-                  "pm.test('No user contains password field', () => {",
-                  "    const jsonData = pm.response.json();",
-                  "    if (Array.isArray(jsonData.data) && jsonData.data.length > 0) {",
-                  "        jsonData.data.forEach(user => {",
-                  "            pm.expect(user).to.not.have.property('password');",
-                  "        });",
-                  "    }",
-                  "});"
-                ],
-                "type": "text/javascript"
-              }
-            }
-          ],
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{accessToken}}"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/api/users",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "users"
-              ]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Get User by ID",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "pm.test('Status code is 200', () => {",
-                  "    pm.response.to.have.status(200);",
-                  "});",
-                  "",
-                  "pm.test('Response contains user data', () => {",
-                  "    const jsonData = pm.response.json();",
-                  "    pm.expect(jsonData.statusCode).to.eql(200);",
-                  "    pm.expect(jsonData.data).to.have.property('id');",
-                  "    pm.expect(jsonData.data).to.have.property('name');",
-                  "    pm.expect(jsonData.data).to.have.property('email');",
-                  "    pm.expect(jsonData.data).to.not.have.property('password');",
-                  "});"
-                ],
-                "type": "text/javascript"
-              }
-            }
-          ],
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{accessToken}}"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/api/users/{{userId}}",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "users",
-                "{{userId}}"
-              ]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Get User by ID - Invalid UUID",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "pm.test('Status code is 400', () => {",
-                  "    pm.response.to.have.status(400);",
-                  "});",
-                  "",
-                  "pm.test('Response contains validation error', () => {",
-                  "    const jsonData = pm.response.json();",
-                  "    pm.expect(jsonData.statusCode).to.eql(400);",
-                  "    pm.expect(jsonData.message).to.include('Invalid parameters');",
-                  "});"
-                ],
-                "type": "text/javascript"
-              }
-            }
-          ],
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{accessToken}}"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/api/users/invalid-id",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "users",
-                "invalid-id"
-              ]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Get User by ID - Non-existent",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "pm.test('Status code is 404', () => {",
-                  "    pm.response.to.have.status(404);",
-                  "});"
-                ],
-                "type": "text/javascript"
-              }
-            }
-          ],
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{accessToken}}"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/api/users/00000000-0000-0000-0000-000000000000",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "users",
-                "00000000-0000-0000-0000-000000000000"
-              ]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Update User",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "pm.test('Status code is 200', () => {",
-                  "    pm.response.to.have.status(200);",
-                  "});",
-                  "",
-                  "pm.test('Response contains updated user data', () => {",
-                  "    const jsonData = pm.response.json();",
-                  "    pm.expect(jsonData.statusCode).to.eql(200);",
-                  "    pm.expect(jsonData.message).to.include('User updated successfully');",
-                  "    pm.expect(jsonData.data).to.have.property('name', 'Updated User Name');",
-                  "});"
-                ],
-                "type": "text/javascript"
-              }
-            }
-          ],
-          "request": {
-            "method": "PUT",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{accessToken}}"
-              },
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"name\": \"Updated User Name\"\n}"
-            },
-            "url": {
-              "raw": "{{baseUrl}}/api/users/{{userId}}",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "users",
-                "{{userId}}"
-              ]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Update User - Update Email",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "pm.test('Status code is 200', () => {",
-                  "    pm.response.to.have.status(200);",
-                  "});",
-                  "",
-                  "pm.test('Response contains updated email', () => {",
-                  "    const jsonData = pm.response.json();",
-                  "    pm.expect(jsonData.statusCode).to.eql(200);",
-                  "    pm.expect(jsonData.data).to.have.property('email', 'updated@example.com');",
-                  "});"
-                ],
-                "type": "text/javascript"
-              }
-            }
-          ],
-          "request": {
-            "method": "PUT",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{accessToken}}"
-              },
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"email\": \"updated@example.com\"\n}"
-            },
-            "url": {
-              "raw": "{{baseUrl}}/api/users/{{userId}}",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "users",
-                "{{userId}}"
-              ]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Update User - Update Password",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "pm.test('Status code is 200', () => {",
-                  "    pm.response.to.have.status(200);",
-                  "});"
-                ],
-                "type": "text/javascript"
-              }
-            }
-          ],
-          "request": {
-            "method": "PUT",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{accessToken}}"
-              },
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"password\": \"NewTest@123456\"\n}"
-            },
-            "url": {
-              "raw": "{{baseUrl}}/api/users/{{userId}}",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "users",
-                "{{userId}}"
-              ]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Update User - Invalid Password",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "pm.test('Status code is 400', () => {",
-                  "    pm.response.to.have.status(400);",
-                  "});",
-                  "",
-                  "pm.test('Response indicates invalid password', () => {",
-                  "    const jsonData = pm.response.json();",
-                  "    pm.expect(jsonData.statusCode).to.eql(400);",
-                  "    pm.expect(jsonData.message).to.include('Password must');",
-                  "});"
-                ],
-                "type": "text/javascript"
-              }
-            }
-          ],
-          "request": {
-            "method": "PUT",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{accessToken}}"
-              },
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"password\": \"weak\"\n}"
-            },
-            "url": {
-              "raw": "{{baseUrl}}/api/users/{{userId}}",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "users",
-                "{{userId}}"
-              ]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Update User - Deactivate Account",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "pm.test('Status code is 200', () => {",
-                  "    pm.response.to.have.status(200);",
-                  "});",
-                  "",
-                  "pm.test('User is deactivated', () => {",
-                  "    const jsonData = pm.response.json();",
-                  "    pm.expect(jsonData.data).to.have.property('isActive', false);",
-                  "});"
-                ],
-                "type": "text/javascript"
-              }
-            }
-          ],
-          "request": {
-            "method": "PUT",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{accessToken}}"
-              },
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"isActive\": false\n}"
-            },
-            "url": {
-              "raw": "{{baseUrl}}/api/users/{{userId}}",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "users",
-                "{{userId}}"
-              ]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Delete User",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "pm.test('Status code is 204', () => {",
-                  "    pm.response.to.have.status(204);",
-                  "});"
-                ],
-                "type": "text/javascript"
-              }
-            }
-          ],
-          "request": {
-            "method": "DELETE",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{accessToken}}"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/api/users/{{userId}}",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "users",
-                "{{userId}}"
-              ]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Delete User - Non-existent",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "pm.test('Status code is 404', () => {",
-                  "    pm.response.to.have.status(404);",
-                  "});"
-                ],
-                "type": "text/javascript"
-              }
-            }
-          ],
-          "request": {
-            "method": "DELETE",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{accessToken}}"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/api/users/00000000-0000-0000-0000-000000000000",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "users",
-                "00000000-0000-0000-0000-000000000000"
-              ]
-            }
-          },
-          "response": []
-        }
-      ]
-    },
-    {
-      "name": "Logout",
-      "item": [
-        {
-          "name": "Logout",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "pm.test('Status code is 200', () => {",
-                  "    pm.response.to.have.status(200);",
-                  "});",
-                  "",
-                  "pm.test('Response indicates successful logout', () => {",
-                  "    const jsonData = pm.response.json();",
-                  "    pm.expect(jsonData.statusCode).to.eql(200);",
-                  "    pm.expect(jsonData.message).to.include('Logged out successfully');",
-                  "});"
-                ],
-                "type": "text/javascript"
-              }
-            }
-          ],
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{accessToken}}"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/api/auth/logout",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "auth",
-                "logout"
-              ]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Logout - Already Logged Out",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "pm.test('Status code is 401', () => {",
-                  "    pm.response.to.have.status(401);",
-                  "});"
-                ],
-                "type": "text/javascript"
-              }
-            }
-          ],
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{accessToken}}"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/api/auth/logout",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "auth",
-                "logout"
-              ]
-            }
-          },
-          "response": []
-        }
-      ]
-    },
-    {
-      "name": "Rate Limit Tests",
-      "item": [
-        {
-          "name": "API Rate Limit Test",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "pm.test('Check rate limit headers', () => {",
-                  "    pm.expect(pm.response.headers.has('X-RateLimit-Limit')).to.be.true;",
-                  "    pm.expect(pm.response.headers.has('X-RateLimit-Remaining')).to.be.true;",
-                  "    pm.expect(pm.response.headers.has('X-RateLimit-Reset')).to.be.true;",
-                  "});",
-                  "",
-                  "pm.test('Status code is 200', () => {",
-                  "    pm.response.to.have.status(200);",
-                  "});"
-                ],
-                "type": "text/javascript"
-              }
-            }
-          ],
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{accessToken}}"
-              }
-            ],
             "url": {
               "raw": "{{baseUrl}}/api/users",
               "host": [
@@ -1310,12 +809,6 @@
                 "exec": [
                   "pm.test('Status code is 404', () => {",
                   "    pm.response.to.have.status(404);",
-                  "});",
-                  "",
-                  "pm.test('Response indicates resource not found', () => {",
-                  "    const jsonData = pm.response.json();",
-                  "    pm.expect(jsonData.statusCode).to.eql(404);",
-                  "    pm.expect(jsonData.message).to.include('not found');",
                   "});"
                 ],
                 "type": "text/javascript"
@@ -1326,12 +819,13 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/api/nonexistent-route",
+              "raw": "{{baseUrl}}/api/v1/nonexistent-route",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "api",
+                "v1",
                 "nonexistent-route"
               ]
             }
@@ -1362,56 +856,13 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/api/auth/me",
+              "raw": "{{baseUrl}}/api/v1/auth/me",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "api",
-                "auth",
-                "me"
-              ]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Expired Token",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "pm.test('Status code is 401', () => {",
-                  "    pm.expect(pm.response.code === 401);",
-                  "});",
-                  "",
-                  "pm.test('Response indicates token expired', () => {",
-                  "    const jsonData = pm.response.json();",
-                  "    if (jsonData.message) {",
-                  "        pm.expect(jsonData.message.toLowerCase()).to.include('expired');",
-                  "    }",
-                  "});"
-                ],
-                "type": "text/javascript"
-              }
-            }
-          ],
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IkpXVCJ9.expired"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/api/auth/me",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
+                "v1",
                 "auth",
                 "me"
               ]
@@ -1425,7 +876,7 @@
       "name": "Workflow Tests",
       "item": [
         {
-          "name": "Full Authentication Flow",
+          "name": "Full Authentication Flow (v1)",
           "item": [
             {
               "name": "1. Register User",
@@ -1442,12 +893,13 @@
                   "raw": "{\n  \"name\": \"Flow Test User\",\n  \"email\": \"flowtest@example.com\",\n  \"password\": \"FlowTest@123\"\n}"
                 },
                 "url": {
-                  "raw": "{{baseUrl}}/api/users",
+                  "raw": "{{baseUrl}}/api/v1/users",
                   "host": [
                     "{{baseUrl}}"
                   ],
                   "path": [
                     "api",
+                    "v1",
                     "users"
                   ]
                 }
@@ -1469,12 +921,13 @@
                   "raw": "{\n  \"email\": \"flowtest@example.com\",\n  \"password\": \"FlowTest@123\"\n}"
                 },
                 "url": {
-                  "raw": "{{baseUrl}}/api/auth/login",
+                  "raw": "{{baseUrl}}/api/v1/auth/login",
                   "host": [
                     "{{baseUrl}}"
                   ],
                   "path": [
                     "api",
+                    "v1",
                     "auth",
                     "login"
                   ]
@@ -1493,12 +946,13 @@
                   }
                 ],
                 "url": {
-                  "raw": "{{baseUrl}}/api/auth/me",
+                  "raw": "{{baseUrl}}/api/v1/auth/me",
                   "host": [
                     "{{baseUrl}}"
                   ],
                   "path": [
                     "api",
+                    "v1",
                     "auth",
                     "me"
                   ]
@@ -1517,12 +971,13 @@
                   }
                 ],
                 "url": {
-                  "raw": "{{baseUrl}}/api/users",
+                  "raw": "{{baseUrl}}/api/v1/users",
                   "host": [
                     "{{baseUrl}}"
                   ],
                   "path": [
                     "api",
+                    "v1",
                     "users"
                   ]
                 }
@@ -1548,12 +1003,13 @@
                   "raw": "{\n  \"name\": \"Updated Flow Test User\"\n}"
                 },
                 "url": {
-                  "raw": "{{baseUrl}}/api/users/{{userId}}",
+                  "raw": "{{baseUrl}}/api/v1/users/{{userId}}",
                   "host": [
                     "{{baseUrl}}"
                   ],
                   "path": [
                     "api",
+                    "v1",
                     "users",
                     "{{userId}}"
                   ]
@@ -1576,12 +1032,13 @@
                   "raw": "{\n  \"refreshToken\": \"{{refreshToken}}\"\n}"
                 },
                 "url": {
-                  "raw": "{{baseUrl}}/api/auth/refresh",
+                  "raw": "{{baseUrl}}/api/v1/auth/refresh",
                   "host": [
                     "{{baseUrl}}"
                   ],
                   "path": [
                     "api",
+                    "v1",
                     "auth",
                     "refresh"
                   ]
@@ -1600,12 +1057,13 @@
                   }
                 ],
                 "url": {
-                  "raw": "{{baseUrl}}/api/auth/sessions",
+                  "raw": "{{baseUrl}}/api/v1/auth/sessions",
                   "host": [
                     "{{baseUrl}}"
                   ],
                   "path": [
                     "api",
+                    "v1",
                     "auth",
                     "sessions"
                   ]
@@ -1624,12 +1082,13 @@
                   }
                 ],
                 "url": {
-                  "raw": "{{baseUrl}}/api/auth/logout",
+                  "raw": "{{baseUrl}}/api/v1/auth/logout",
                   "host": [
                     "{{baseUrl}}"
                   ],
                   "path": [
                     "api",
+                    "v1",
                     "auth",
                     "logout"
                   ]
@@ -1648,32 +1107,19 @@
                   }
                 ],
                 "url": {
-                  "raw": "{{baseUrl}}/api/users/{{userId}}",
+                  "raw": "{{baseUrl}}/api/v1/users/{{userId}}",
                   "host": [
                     "{{baseUrl}}"
                   ],
                   "path": [
                     "api",
+                    "v1",
                     "users",
                     "{{userId}}"
                   ]
                 }
               },
               "response": []
-            }
-          ],
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "console.log('Running full authentication flow test...');",
-                  "pm.test('This is a workflow test that should be run manually', () => {",
-                  "    pm.expect(true).to.be.true;",
-                  "});"
-                ],
-                "type": "text/javascript"
-              }
             }
           ]
         }
